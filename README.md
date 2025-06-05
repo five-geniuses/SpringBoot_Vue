@@ -1,6 +1,6 @@
 # 项目
 
-## 前端_CandyShopWeb-main
+## 前端
 
 1> 删除package-lock.json以及node_modules文件夹
 
