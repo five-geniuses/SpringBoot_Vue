@@ -1,10 +1,27 @@
-# SpringBoot_Vue
-#前端代码模板：https://github.com/PanJiaChen/vue-admin-template.git
+# 项目
 
+## 前端_CandyShopWeb-main
 
-#git使用方式：https://blog.csdn.net/ingenuou_/article/details/107452638 
-##1>误传文件，具体删除办法 $ git pull origin master将远程仓库里面的项目拉下来 $ dir查看有哪些文件夹 $ git rm -r --cached "文件名" $ git commit -m '描述' $ git push -u origin master # 提交 
-##2>上传操作 $ git add " " # 执行添加文件操作，注意"add空格." $ git commit -m '描述' # 提交,添加操作说明 $ git push -u origin master # 将本次更改更新到github项目上去 $ git push -u origin master # 提交 
-##3>提交的分支你们可以自己在设
+1> 删除package-lock.json以及node_modules文件夹
 
-###有时候可能会提交异常，重新拉取一下重新尝试，遇到报错多尝试。
+2> npm install 遇到报错看一些自己nods和npm配置好没，其次注意版本对应
+https://github.com/Misakiop/CandyShopWeb
+
+3> vue2项目，指令npm run dev 启动
+
+## 后端
+
+1> Mysql导入db_candy.sql文件
+
+2> 修改 src/main/resources/application.properties 修改相关配置
+
+3> <properties><java.version>21</java.version></properties> JDK21
+
+4> 安装插件-lombok，见链接
+https://blog.csdn.net/ThinkWon/article/details/101392808
+
+5> 重构pom.xml
+
+6> 启动redis
+
+7> 启动后端即可
