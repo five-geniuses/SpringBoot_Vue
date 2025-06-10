@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>商品管理测试</title>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="//unpkg.com/element-plus/dist/index.css">
+    <!-- 引入Vue 3 -->
+    <script src="//unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!-- 引入Element Plus -->
+    <script src="//unpkg.com/element-plus"></script>
+    <!-- 引入中文语言包 -->
+    <script src="//unpkg.com/element-plus/dist/locale/zh-cn.min.js"></script>
+    <style>
+        .container {
+            padding: 20px;
+        }
+        .operation-container {
+            margin-bottom: 20px;
+        }
+        .el-form {
+            max-width: 600px;
+        }
+        .preview-image {
+            max-width: 200px;
+            max-height: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="container">
+        <h2>商品管理测试界面</h2>
+        
+        <!-- 操作按钮 -->
+        <div class="operation-container">
+            <el-button type="primary" @click="showAddDialog">添加商品</el-button>
+            <el-input
+                v-model="searchName"
+                placeholder="输入商品名称搜索"
+                style="width: 200px; margin-left: 10px;"
+                @keyup.enter="searchGoods"
+            ></el-input>
+            <el-button type="primary" @click="searchGoods">搜索</el-button>
+            <el-button @click="loadGoods">刷新列表</el-button>
+        </div>
+
+        <!-- 商品列表 -->
+        <el-table :data="goodsList" border style="width: 100%">
+            <el-table-column prop="goodsId" label="ID" width="80"></el-table-column>
+            <el-table-column prop="name" label="商品名称" width="120"></el-table-column>
+            <el-table-column prop="desc" label="描述" width="180"></el-table-column>
+            <el-table-column prop="price" label="价格" width="100"></el-table-column>
+            <el-table-column prop="num" label="数量" width="80"></el-table-column>
+            <el-table-column prop="kgs" label="重量(kg)" width="100"></el-table-column>
+            <el-table-column prop="size" label="尺寸" width="100"></el-table-column>
+            <el-table-column prop="storagemethod" label="存储方式" width="120"></el-table-column>
+            <el-table-column label="图片" width="120">
+                <template #default="scope">
+                    <el-image 
+                        v-if="scope.row.imgUrl"
+                        :src="'/uploads/' + scope.row.imgUrl"
+                        :preview-src-list="['/uploads/' + scope.row.imgUrl]"
+                        class="preview-image">
+                    </el-image>
+                </template>
+            </el-table-column>
+            <el-table-column label="操作" width="200" fixed="right">
+                <template #default="scope">
+                    <el-button size="small" type="primary" @click="showEditDialog(scope.row)">编辑</el-button>
+                    <el-button 
+                        size="small" 
+                        type="danger" 
+                        @click="deleteGoods(scope.row.goodsId)"
+                        :loading="scope.row.deleting">
+                        删除
+                    </el-button>
+                </template>
+            </el-table-column>
+        </el-table>
+
+        <!-- 添加/编辑商品对话框 -->
+        <el-dialog 
+            :title="dialogTitle"
+            v-model="dialogVisible"
+            width="50%">
+            <el-form :model="goodsForm" label-width="120px">
+                <el-form-item label="商品名称">
+                    <el-input v-model="goodsForm.name"></el-input>
+                </el-form-item>
+                <el-form-item label="描述">
+                    <el-input v-model="goodsForm.desc" type="textarea"></el-input>
+                </el-form-item>
+                <el-form-item label="分类ID">
+                    <el-input v-model="goodsForm.cateId" type="number"></el-input>
+                </el-form-item>
+                <el-form-item label="价格">
+                    <el-input v-model="goodsForm.price" type="number"></el-input>
+                </el-form-item>
+                <el-form-item label="数量">
+                    <el-input v-model="goodsForm.num" type="number"></el-input>
+                </el-form-item>
+                <el-form-item label="重量(kg)">
+                    <el-input v-model="goodsForm.kgs" type="number"></el-input>
+                </el-form-item>
+                <el-form-item label="尺寸">
+                    <el-input v-model="goodsForm.size"></el-input>
+                </el-form-item>
+                <el-form-item label="生产日期">
+                    <el-date-picker
+                        v-model="goodsForm.creationdate"
+                        type="datetime"
+                        placeholder="选择日期时间">
+                    </el-date-picker>
+                </el-form-item>
+                <el-form-item label="过期日期">
+                    <el-date-picker
+                        v-model="goodsForm.expirationdate"
+                        type="datetime"
+                        placeholder="选择日期时间">
+                    </el-date-picker>
+                </el-form-item>
+                <el-form-item label="存储方式">
+                    <el-input v-model="goodsForm.storagemethod"></el-input>
+                </el-form-item>
+                <el-form-item label="状态">
+                    <el-select v-model="goodsForm.state">
+                        <el-option :value="1" label="正常"></el-option>
+                        <el-option :value="0" label="下架"></el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item label="商品图片">
+                    <el-upload
+                        class="avatar-uploader"
+                        action="#"
+                        :auto-upload="false"
+                        :show-file-list="true"
+                        :on-change="handleFileChange">
+                        <el-button type="primary">选择图片</el-button>
+                    </el-upload>
+                </el-form-item>
+            </el-form>
+            <template #footer>
+                <span class="dialog-footer">
+                    <el-button @click="dialogVisible = false">取消</el-button>
+                    <el-button type="primary" @click="submitForm">确定</el-button>
+                </span>
+            </template>
+        </el-dialog>
+    </div>
+
+    <script>
+        const { createApp, ref } = Vue
+        const { ElMessage, ElMessageBox } = ElementPlus
+        
+        const app = createApp({
+            setup() {
+                const goodsList = ref([])
+                const searchName = ref('')
+                const dialogVisible = ref(false)
+                const dialogTitle = ref('')
+                const selectedFile = ref(null)
+                
+                const goodsForm = ref({
+                    goodsId: null,
+                    name: '',
+                    desc: '',
+                    cateId: null,
+                    price: null,
+                    num: null,
+                    kgs: null,
+                    size: '',
+                    creationdate: null,
+                    expirationdate: null,
+                    storagemethod: '',
+                    state: 1
+                })
+
+                const formatDate = (date) => {
+                    if (!date) return null;
+                    if (typeof date === 'string') return date;
+
+                    const pad = (n) => n.toString().padStart(2, '0');
+                    const yyyy = date.getFullYear();
+                    const MM = pad(date.getMonth() + 1);
+                    const dd = pad(date.getDate());
+                    const HH = pad(date.getHours());
+                    const mm = pad(date.getMinutes());
+                    const ss = pad(date.getSeconds());
+                    return `${yyyy}-${MM}-${dd} ${HH}:${mm}:${ss}`;
+                };
+
+                // 格式化数字为字符串
+                const formatNumber = (num) => {
+                    if (num === null || num === undefined) return null;
+                    return num.toString();
+                };
+
+                // 提交前的数据转换
+                const prepareFormData = (form) => {
+                    const formData = {
+                        name: form.name,
+                        desc: form.desc,
+                        cateId: form.cateId,
+                        price: formatNumber(form.price),
+                        num: form.num,
+                        kgs: formatNumber(form.kgs),
+                        size: form.size,
+                        creationdate: formatDate(form.creationdate),
+                        expirationdate: formatDate(form.expirationdate),
+                        storagemethod: form.storagemethod,
+                        state: form.state,
+                        addtime: formatDate(new Date())
+                    };
+
+                    // 只在编辑时添加goodsId
+                    if (form.goodsId) {
+                        formData.goodsId = form.goodsId;
+                    }
+
+                    return formData;
+                };
+
+                // 处理后端返回的数据
+                const processReceivedData = (data) => {
+                    return data.map(item => ({
+                        ...item,
+                        // 将字符串价格转换为数字
+                        price: item.price ? parseFloat(item.price) : null,
+                        // 将字符串重量转换为数字
+                        kgs: item.kgs ? parseFloat(item.kgs) : null,
+                        // 将日期字符串转换为Date对象
+                        creationdate: item.creationdate ? new Date(item.creationdate) : null,
+                        expirationdate: item.expirationdate ? new Date(item.expirationdate) : null
+                    }));
+                };
+
+                // 加载商品列表
+                const loadGoods = async () => {
+                    try {
+                        const response = await fetch('/api/goods')
+                        const data = await response.json()
+                        goodsList.value = processReceivedData(data)
+                    } catch (error) {
+                        ElMessage.error('加载商品列表失败')
+                        console.error('Error:', error)
+                    }
+                }
+
+                // 搜索商品
+                const searchGoods = async () => {
+                    try {
+                        const response = await fetch(`/api/goods/search?name=${searchName.value}`)
+                        const data = await response.json()
+                        goodsList.value = processReceivedData(data)
+                    } catch (error) {
+                        ElMessage.error('搜索商品失败')
+                        console.error('Error:', error)
+                    }
+                }
+
+                // 显示添加对话框
+                const showAddDialog = () => {
+                    dialogTitle.value = '添加商品'
+                    goodsForm.value = {
+                        goodsId: null,
+                        name: '',
+                        desc: '',
+                        cateId: null,
+                        price: null,
+                        num: null,
+                        kgs: null,
+                        size: '',
+                        creationdate: null,
+                        expirationdate: null,
+                        storagemethod: '',
+                        state: 1
+                    }
+                    selectedFile.value = null
+                    dialogVisible.value = true
+                }
+
+                // 显示编辑对话框
+                const showEditDialog = (row) => {
+                    dialogTitle.value = '编辑商品'
+                    goodsForm.value = {
+                        goodsId: row.goodsId,
+                        name: row.name,
+                        desc: row.desc,
+                        cateId: row.cateId,
+                        price: row.price,
+                        num: row.num,
+                        kgs: row.kgs,
+                        size: row.size,
+                        creationdate: row.creationdate ? new Date(row.creationdate) : null,
+                        expirationdate: row.expirationdate ? new Date(row.expirationdate) : null,
+                        storagemethod: row.storagemethod,
+                        state: row.state
+                    }
+                    selectedFile.value = null
+                    dialogVisible.value = true
+                }
+
+                // 处理文件选择
+                const handleFileChange = (file) => {
+                    selectedFile.value = file.raw
+                }
+
+                // 提交表单
+                const submitForm = async () => {
+                    try {
+                        const formData = new FormData();
+                        const processedData = prepareFormData(goodsForm.value);
+                        const goodsData = new Blob([JSON.stringify(processedData)], {
+                            type: 'application/json'
+                        });
+                        formData.append('goods', goodsData);
+                        if (selectedFile.value) {
+                            formData.append('file', selectedFile.value);
+                        }
+
+                        let url = '/api/goods';
+                        let method = 'POST';
+                        if (goodsForm.value.goodsId) {
+                            url = `/api/goods/${goodsForm.value.goodsId}`;
+                            method = 'PUT';
+                        }
+
+                        const response = await fetch(url, {
+                            method: method,
+                            body: formData
+                        });
+
+                        if (response.ok) {
+                            ElMessage.success(goodsForm.value.goodsId ? '更新成功' : '添加成功');
+                            dialogVisible.value = false;
+                            loadGoods();
+                        } else {
+                            const errorData = await response.json();
+                            throw new Error(errorData.message || '操作失败');
+                        }
+                    } catch (error) {
+                        ElMessage.error(error.message || '操作失败');
+                        console.error('Error:', error);
+                    }
+                }
+
+                // 删除商品
+                const deleteGoods = async (goodsId) => {
+                    try {
+                        await ElMessageBox.confirm(
+                            '确定要删除这个商品吗？',
+                            '警告',
+                            {
+                                confirmButtonText: '确定',
+                                cancelButtonText: '取消',
+                                type: 'warning'
+                            }
+                        )
+
+                        // 设置删除中状态
+                        const index = goodsList.value.findIndex(item => item.goodsId === goodsId);
+                        if (index !== -1) {
+                            goodsList.value[index] = { ...goodsList.value[index], deleting: true };
+                        }
+
+                        const response = await fetch(`/api/goods/${goodsId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        })
+
+                        if (response.ok) {
+                            ElMessage.success('删除成功')
+                            await loadGoods()
+                        } else {
+                            const errorData = await response.json()
+                            throw new Error(errorData.message || '删除失败')
+                        }
+                    } catch (error) {
+                        if (error !== 'cancel') {
+                            ElMessage.error(error.message || '删除失败')
+                            console.error('Error:', error)
+                            // 重置删除中状态
+                            const index = goodsList.value.findIndex(item => item.goodsId === goodsId);
+                            if (index !== -1) {
+                                goodsList.value[index] = { ...goodsList.value[index], deleting: false };
+                            }
+                        }
+                    }
+                }
+
+                // 初始加载
+                loadGoods()
+
+                return {
+                    goodsList,
+                    searchName,
+                    dialogVisible,
+                    dialogTitle,
+                    goodsForm,
+                    loadGoods,
+                    searchGoods,
+                    showAddDialog,
+                    showEditDialog,
+                    handleFileChange,
+                    submitForm,
+                    deleteGoods
+                }
+            }
+        })
+
+        app.use(ElementPlus, {
+            locale: ElementPlusLocaleZhCn,
+        })
+        
+        app.mount('#app')
+    </script>
+</body>
+</html> 
