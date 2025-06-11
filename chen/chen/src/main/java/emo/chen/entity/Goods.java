@@ -23,6 +23,9 @@ public class Goods {
     @TableField("cate_id")
     private Integer cateId;
     
+    @TableField(exist = false)
+    private String categoryName;
+    
     private BigDecimal price;
     private Integer num;
     private Double kgs;
@@ -156,4 +159,12 @@ public class Goods {
     
     @TableField("img_url")
     private String imgUrl;
+
+    public String getCategoryName() {
+        return categoryName;
+    }
+
+    public void setCategoryName(String categoryName) {
+        this.categoryName = categoryName;
+    }
 } 

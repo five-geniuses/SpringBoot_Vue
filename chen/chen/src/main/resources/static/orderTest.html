@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>订单管理</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14"></script>
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        .order-container {
+            width: 90%;
+            margin: 20px auto;
+        }
+        .order-status {
+            margin-bottom: 20px;
+        }
+        .order-item {
+            margin-bottom: 20px;
+        }
+        .order-total {
+            font-size: 16px;
+            color: #f56c6c;
+        }
+        .status-tag {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="order-container">
+        <el-card>
+            <div slot="header">
+                <span>订单管理</span>
+            </div>
+
+            <!-- 订单状态筛选 -->
+            <div class="order-status">
+                <el-radio-group v-model="currentStatus" @change="loadOrders">
+                    <el-radio-button :label="null">全部</el-radio-button>
+                    <el-radio-button :label="0">待付款</el-radio-button>
+                    <el-radio-button :label="1">待发货</el-radio-button>
+                    <el-radio-button :label="2">待收货</el-radio-button>
+                    <el-radio-button :label="3">已完成</el-radio-button>
+                    <el-radio-button :label="4">已取消</el-radio-button>
+                </el-radio-group>
+            </div>
+
+            <!-- 订单列表 -->
+            <el-table :data="orderList" border style="width: 100%">
+                <el-table-column prop="orderNo" label="订单号" width="180">
+                </el-table-column>
+                <el-table-column prop="totalAmount" label="订单金额" width="120">
+                    <template slot-scope="scope">
+                        ¥{{ scope.row.totalAmount }}
+                    </template>
+                </el-table-column>
+                <el-table-column prop="buyNum" label="购买数量" width="100">
+                </el-table-column>
+                <el-table-column prop="buyPrice" label="单价" width="120">
+                    <template slot-scope="scope">
+                        ¥{{ scope.row.buyPrice }}
+                    </template>
+                </el-table-column>
+                <el-table-column prop="receiverName" label="收货人" width="120">
+                </el-table-column>
+                <el-table-column prop="receiverPhone" label="联系电话" width="140">
+                </el-table-column>
+                <el-table-column prop="orderState" label="订单状态" width="100">
+                    <template slot-scope="scope">
+                        <el-tag :type="getStatusType(scope.row.orderState)">
+                            {{ getStatusText(scope.row.orderState) }}
+                        </el-tag>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="payState" label="支付状态" width="100">
+                    <template slot-scope="scope">
+                        <el-tag :type="scope.row.payState === 1 ? 'success' : 'warning'">
+                            {{ scope.row.payState === 1 ? '已支付' : '未支付' }}
+                        </el-tag>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="createTime" label="创建时间" width="180">
+                </el-table-column>
+                <el-table-column label="操作">
+                    <template slot-scope="scope">
+                        <el-button v-if="scope.row.orderState === 0"
+                                 type="primary" 
+                                 size="small" 
+                                 @click="payOrder(scope.row)">
+                            付款
+                        </el-button>
+                        <el-button v-if="scope.row.orderState === 0"
+                                 type="danger" 
+                                 size="small" 
+                                 @click="cancelOrder(scope.row)">
+                            取消
+                        </el-button>
+                        <el-button v-if="scope.row.orderState === 1"
+                                 type="primary" 
+                                 size="small" 
+                                 @click="deliverOrder(scope.row)">
+                            发货
+                        </el-button>
+                        <el-button v-if="scope.row.orderState === 2"
+                                 type="success" 
+                                 size="small" 
+                                 @click="confirmOrder(scope.row)">
+                            确认收货
+                        </el-button>
+                        <el-button type="info" 
+                                 size="small" 
+                                 @click="viewOrderDetail(scope.row)">
+                            查看详情
+                        </el-button>
+                    </template>
+                </el-table-column>
+            </el-table>
+
+            <!-- 分页 -->
+            <div class="pagination" style="margin-top: 20px; text-align: right;">
+                <el-pagination
+                    @current-change="handleCurrentChange"
+                    :current-page="currentPage"
+                    :page-size="pageSize"
+                    layout="total, prev, pager, next"
+                    :total="total">
+                </el-pagination>
+            </div>
+        </el-card>
+
+        <!-- 订单详情对话框 -->
+        <el-dialog title="订单详情" :visible.sync="detailDialogVisible" width="70%">
+            <el-descriptions :column="2" border>
+                <el-descriptions-item label="订单号">{{ currentOrder.orderNo }}</el-descriptions-item>
+                <el-descriptions-item label="订单状态">
+                    <el-tag :type="getStatusType(currentOrder.orderState)">
+                        {{ getStatusText(currentOrder.orderState) }}
+                    </el-tag>
+                </el-descriptions-item>
+                <el-descriptions-item label="收货人">{{ currentOrder.receiverName }}</el-descriptions-item>
+                <el-descriptions-item label="联系电话">{{ currentOrder.receiverPhone }}</el-descriptions-item>
+                <el-descriptions-item label="收货地址">{{ currentOrder.receiverAddress }}</el-descriptions-item>
+                <el-descriptions-item label="订单备注">{{ currentOrder.remark }}</el-descriptions-item>
+                <el-descriptions-item label="创建时间">{{ currentOrder.createTime }}</el-descriptions-item>
+                <el-descriptions-item label="支付时间">{{ currentOrder.payTime }}</el-descriptions-item>
+                <el-descriptions-item label="发货时间">{{ currentOrder.deliveryTime }}</el-descriptions-item>
+                <el-descriptions-item label="完成时间">{{ currentOrder.completeTime }}</el-descriptions-item>
+            </el-descriptions>
+
+            <el-table :data="orderItems" border style="margin-top: 20px">
+                <el-table-column prop="goodsName" label="商品名称"></el-table-column>
+                <el-table-column prop="price" label="单价">
+                    <template slot-scope="scope">¥{{ scope.row.price }}</template>
+                </el-table-column>
+                <el-table-column prop="quantity" label="数量"></el-table-column>
+                <el-table-column prop="totalPrice" label="小计">
+                    <template slot-scope="scope">¥{{ scope.row.totalPrice }}</template>
+                </el-table-column>
+            </el-table>
+
+            <div class="order-total" style="margin-top: 20px; text-align: right;">
+                总计：¥{{ currentOrder.totalAmount }}
+            </div>
+        </el-dialog>
+    </div>
+
+    <script>
+        new Vue({
+            el: '#app',
+            data() {
+                return {
+                    userId: 1, // 当前用户ID
+                    currentStatus: null,
+                    orderList: [],
+                    currentPage: 1,
+                    pageSize: 10,
+                    total: 0,
+                    detailDialogVisible: false,
+                    currentOrder: {},
+                    orderItems: []
+                }
+            },
+            created() {
+                this.loadOrders();
+            },
+            methods: {
+                // 加载订单列表
+                loadOrders() {
+                    axios.get(`/api/orders/user/${this.userId}`, {
+                        params: {
+                            orderState: this.currentStatus,
+                            page: this.currentPage,
+                            size: this.pageSize
+                        }
+                    }).then(response => {
+                        this.orderList = response.data.records;
+                        this.total = response.data.total;
+                    });
+                },
+                // 获取订单状态文本
+                getStatusText(status) {
+                    const statusMap = {
+                        0: '待付款',
+                        1: '待发货',
+                        2: '待收货',
+                        3: '已完成',
+                        4: '已取消'
+                    };
+                    return statusMap[status] || '未知状态';
+                },
+                // 获取状态标签类型
+                getStatusType(status) {
+                    const typeMap = {
+                        0: 'warning',
+                        1: 'primary',
+                        2: 'success',
+                        3: 'info',
+                        4: 'danger'
+                    };
+                    return typeMap[status] || '';
+                },
+                // 支付订单
+                payOrder(order) {
+                    this.$confirm('确定要支付该订单吗？', '提示', {
+                        type: 'warning'
+                    }).then(() => {
+                        axios.post(`/api/orders/pay/${order.orderNo}`).then(() => {
+                            this.$message.success('支付成功');
+                            this.loadOrders();
+                        });
+                    });
+                },
+                // 取消订单
+                cancelOrder(order) {
+                    this.$confirm('确定要取消该订单吗？', '提示', {
+                        type: 'warning'
+                    }).then(() => {
+                        axios.post(`/api/orders/cancel/${order.orderNo}`).then(() => {
+                            this.$message.success('订单已取消');
+                            this.loadOrders();
+                        });
+                    });
+                },
+                // 发货
+                deliverOrder(order) {
+                    this.$confirm('确定要发货吗？', '提示', {
+                        type: 'warning'
+                    }).then(() => {
+                        axios.post(`/api/orders/deliver/${order.orderNo}`).then(() => {
+                            this.$message.success('发货成功');
+                            this.loadOrders();
+                        });
+                    });
+                },
+                // 确认收货
+                confirmOrder(order) {
+                    this.$confirm('确定已收到商品吗？', '提示', {
+                        type: 'warning'
+                    }).then(() => {
+                        axios.post(`/api/orders/confirm/${order.orderNo}`).then(() => {
+                            this.$message.success('确认收货成功');
+                            this.loadOrders();
+                        });
+                    });
+                },
+                // 查看订单详情
+                viewOrderDetail(order) {
+                    this.currentOrder = order;
+                    // 加载订单项
+                    axios.get(`/api/orders/items/${order.orderNo}`).then(response => {
+                        this.orderItems = response.data;
+                        this.detailDialogVisible = true;
+                    });
+                },
+                // 分页
+                handleCurrentChange(page) {
+                    this.currentPage = page;
+                    this.loadOrders();
+                }
+            }
+        });
+    </script>
+</body>
+</html> 

@@ -5,7 +5,9 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import emo.chen.entity.Goods;
 import emo.chen.mapper.GoodsMapper;
 import emo.chen.service.GoodsService;
+import emo.chen.service.CategoryService;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
@@ -21,24 +23,57 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsMapper, Goods> implements
     
     private static final Logger logger = LoggerFactory.getLogger(GoodsServiceImpl.class);
 
+    @Autowired
+    private CategoryService categoryService;
+
     @Value("${file.upload-path}")
     private String uploadPath;
 
+    private void setCategoryName(Goods goods) {
+        if (goods != null && goods.getCateId() != null) {
+            String categoryName = categoryService.getCategoryName(goods.getCateId());
+            goods.setCategoryName(categoryName != null ? categoryName : "未知分类");
+        }
+    }
+
     @Override
     public Goods findById(Integer goodsId) {
-        return getById(goodsId);
+        Goods goods = getById(goodsId);
+        if (goods != null) {
+            setCategoryName(goods);
+        }
+        return goods;
     }
 
     @Override
     public List<Goods> findByName(String name) {
         LambdaQueryWrapper<Goods> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.like(Goods::getName, name);
-        return list(queryWrapper);
+        List<Goods> goodsList = list(queryWrapper);
+        goodsList.forEach(this::setCategoryName);
+        return goodsList;
     }
 
     @Override
     public List<Goods> findAll() {
-        return list();
+        List<Goods> goodsList = list();
+        goodsList.forEach(this::setCategoryName);
+        return goodsList;
+    }
+
+    // 添加验证商品数量的方法
+    private void validateAndSetGoodsStatus(Goods goods) {
+        // 确保商品数量不小于0
+        if (goods.getNum() < 0) {
+            goods.setNum(0);
+        }
+        
+        // 当商品数量为0时，自动将状态设置为0
+        if (goods.getNum() == 0) {
+            goods.setState(0);
+        } else if (goods.getState() == null) {
+            goods.setState(1); // 如果数量大于0且状态为null，设置为正常状态
+        }
     }
 
     @Override
@@ -53,12 +88,13 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsMapper, Goods> implements
         goods.setAddtime(new Date());
         goods.setCreationdate(new Date());
         
-        // 设置默认状态
-        if (goods.getState() == null) {
-            goods.setState(1); // 1表示正常状态
-        }
+        // 验证并设置商品状态
+        validateAndSetGoodsStatus(goods);
         
         save(goods);
+        
+        // 设置分类名称
+        setCategoryName(goods);
         return goods;
     }
 
@@ -74,7 +110,14 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsMapper, Goods> implements
             goods.setImgUrl(fileName);
         }
         
-        return updateById(goods);
+        // 验证并设置商品状态
+        validateAndSetGoodsStatus(goods);
+        
+        boolean result = updateById(goods);
+        if (result) {
+            setCategoryName(goods);
+        }
+        return result;
     }
 
     @Override
