@@ -77,13 +77,7 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsMapper, Goods> implements
     }
 
     @Override
-    public Goods insert(Goods goods, MultipartFile file) {
-        // 处理文件上传
-        if (file != null && !file.isEmpty()) {
-            String fileName = handleFileUpload(file);
-            goods.setImgUrl(fileName);
-        }
-        
+    public Goods insert(Goods goods) {
         // 设置创建时间
         goods.setAddtime(new Date());
         goods.setCreationdate(new Date());
@@ -99,17 +93,7 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsMapper, Goods> implements
     }
 
     @Override
-    public boolean update(Goods goods, MultipartFile file) {
-        // 如果有新文件上传，先删除旧文件
-        if (file != null && !file.isEmpty()) {
-            Goods oldGoods = getById(goods.getGoodsId());
-            if (oldGoods != null && oldGoods.getImgUrl() != null) {
-                deleteOldFile(oldGoods.getImgUrl());
-            }
-            String fileName = handleFileUpload(file);
-            goods.setImgUrl(fileName);
-        }
-        
+    public boolean update(Goods goods) {
         // 验证并设置商品状态
         validateAndSetGoodsStatus(goods);
         

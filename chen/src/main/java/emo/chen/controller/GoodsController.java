@@ -10,6 +10,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RestController
 @RequestMapping("/api/goods")
@@ -59,12 +60,10 @@ public class GoodsController {
     }
 
     @PostMapping
-    public ResponseEntity<Goods> create(
-            @RequestPart("goods") Goods goods,
-            @RequestPart(value = "file", required = false) MultipartFile file) {
+    public ResponseEntity<Goods> create(@RequestBody Goods goods) {
         logger.info("创建商品: {}", goods);
         try {
-            return ResponseEntity.ok(goodsService.insert(goods, file));
+            return ResponseEntity.ok(goodsService.insert(goods));
         } catch (Exception e) {
             logger.error("创建商品失败: {}", goods, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -74,12 +73,11 @@ public class GoodsController {
     @PutMapping("/{id}")
     public ResponseEntity<Void> update(
             @PathVariable("id") Integer id,
-            @RequestPart("goods") Goods goods,
-            @RequestPart(value = "file", required = false) MultipartFile file) {
+            @RequestBody Goods goods) {
         logger.info("更新商品，ID: {}, 商品信息: {}", id, goods);
         try {
             goods.setGoodsId(id);
-            return goodsService.update(goods, file)
+            return goodsService.update(goods)
                     ? ResponseEntity.ok().build()
                     : ResponseEntity.notFound().build();
         } catch (Exception e) {

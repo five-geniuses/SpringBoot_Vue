@@ -495,10 +495,7 @@
                             try {
                                 const formData = new FormData();
                                 const processedData = prepareFormData(goodsForm.value);
-                                const goodsData = new Blob([JSON.stringify(processedData)], {
-                                    type: 'application/json'
-                                });
-                                formData.append('goods', goodsData);
+                                formData.append('goods', JSON.stringify(processedData));
                                 if (selectedFile.value) {
                                     formData.append('file', selectedFile.value);
                                 }
