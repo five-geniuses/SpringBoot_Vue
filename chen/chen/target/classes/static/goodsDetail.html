@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商品详情</title>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus/dist/index.css" />
+    <!-- 引入Vue 3 -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js"></script>
+    <!-- 引入Element Plus -->
+    <script src="https://cdn.jsdelivr.net/npm/element-plus"></script>
+    <!-- 引入Element Plus 图标 -->
+    <script src="https://cdn.jsdelivr.net/npm/@element-plus/icons-vue"></script>
+    <style>
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .goods-info {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        .goods-image {
+            width: 400px;
+            height: 400px;
+            object-fit: cover;
+        }
+        .goods-details {
+            flex: 1;
+        }
+        .price {
+            color: #f56c6c;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .rating {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .comment-list {
+            margin-top: 30px;
+        }
+        .comment-item {
+            border-bottom: 1px solid #eee;
+            padding: 15px 0;
+        }
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .comment-user {
+            font-weight: bold;
+        }
+        .comment-time {
+            color: #999;
+        }
+        .comment-rating {
+            margin: 10px 0;
+        }
+        .comment-content {
+            margin: 10px 0;
+            color: #666;
+        }
+        .login-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="container">
+        <!-- 登录按钮 -->
+        <div class="login-button">
+            <el-button v-if="!isLoggedIn" type="primary" @click="showLoginDialog">登录</el-button>
+            <el-button v-else type="info" @click="logout">退出登录</el-button>
+        </div>
+
+        <!-- 商品信息 -->
+        <div class="goods-info">
+            <img :src="goods.imgUrl || '/images/default-image.jpg'" :alt="goods.name" class="goods-image">
+            <div class="goods-details">
+                <h1>{{ goods.name }}</h1>
+                <div class="rating">
+                    <span>综合评分：</span>
+                    <el-rate
+                        v-model="goods.avgRating"
+                        disabled
+                        show-score
+                        text-color="#ff9900"
+                        score-template="{value}">
+                    </el-rate>
+                </div>
+                <div class="price">¥{{ goods.price }}</div>
+                <div>库存：{{ goods.num }}</div>
+                <div>销量：{{ goods.sales }}</div>
+                <div>商品描述：{{ goods.desc }}</div>
+                <div style="margin-top: 20px;">
+                    <el-button type="primary" @click="showAddToCartDialog">加入购物车</el-button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 评论区域 -->
+        <div class="comment-section">
+            <el-divider>商品评论</el-divider>
+            
+            <!-- 发表评论 -->
+            <div v-if="isLoggedIn" style="margin-bottom: 20px;">
+                <el-form :model="commentForm" :rules="commentRules" ref="commentFormRef">
+                    <el-form-item prop="rating">
+                        <el-rate
+                            v-model="commentForm.rating"
+                            :texts="['1分', '2分', '3分', '4分', '5分']"
+                            show-text>
+                        </el-rate>
+                    </el-form-item>
+                    <el-form-item prop="content">
+                        <el-input
+                            v-model="commentForm.content"
+                            type="textarea"
+                            :rows="3"
+                            placeholder="请输入您的评价">
+                        </el-input>
+                    </el-form-item>
+                    <el-form-item>
+                        <el-button type="primary" @click="submitComment" :loading="submitting">
+                            发表评论
+                        </el-button>
+                    </el-form-item>
+                </el-form>
+            </div>
+            <div v-else>
+                <el-alert
+                    title="请登录后发表评论"
+                    type="info"
+                    :closable="false">
+                </el-alert>
+            </div>
+
+            <!-- 评论列表 -->
+            <div class="comment-list">
+                <div v-if="comments.length === 0" style="text-align: center; color: #999;">
+                    暂无评论
+                </div>
+                <div v-else v-for="comment in comments" :key="comment.commentId" class="comment-item">
+                    <div class="comment-header">
+                        <span class="comment-user">{{ comment.userName || '用户' + comment.userId }}</span>
+                        <div>
+                            <span class="comment-time">{{ comment.createTime }}</span>
+                            <!-- 只有评论作者才能看到删除按钮 -->
+                            <el-button 
+                                v-if="comment.userId === userId"
+                                type="text" 
+                                style="color: #F56C6C; margin-left: 10px;"
+                                @click="deleteComment(comment.commentId)">
+                                删除
+                            </el-button>
+                        </div>
+                    </div>
+                    <div class="comment-rating">
+                        <el-rate
+                            v-model="comment.rating"
+                            disabled>
+                        </el-rate>
+                    </div>
+                    <div class="comment-content">{{ comment.content }}</div>
+                </div>
+                
+                <!-- 分页 -->
+                <div style="margin-top: 20px; text-align: center;">
+                    <el-pagination
+                        v-if="total > 0"
+                        v-model:current-page="currentPage"
+                        v-model:page-size="pageSize"
+                        :total="total"
+                        :page-sizes="[5, 10, 20, 50]"
+                        layout="total, sizes, prev, pager, next"
+                        @size-change="handleSizeChange"
+                        @current-change="handleCurrentChange">
+                    </el-pagination>
+                </div>
+            </div>
+        </div>
+
+        <!-- 加入购物车对话框 -->
+        <el-dialog
+            v-model="cartDialogVisible"
+            title="加入购物车"
+            width="30%">
+            <el-form :model="cartForm" :rules="cartRules" ref="cartFormRef">
+                <el-form-item label="数量" prop="quantity">
+                    <el-input-number
+                        v-model="cartForm.quantity"
+                        :min="1"
+                        :max="goods.num"
+                        :step="1">
+                    </el-input-number>
+                </el-form-item>
+            </el-form>
+            <template #footer>
+                <span class="dialog-footer">
+                    <el-button @click="cartDialogVisible = false">取消</el-button>
+                    <el-button type="primary" @click="addToCart" :loading="addingToCart">
+                        确认
+                    </el-button>
+                </span>
+            </template>
+        </el-dialog>
+
+        <!-- 登录对话框 -->
+        <el-dialog
+            v-model="loginDialogVisible"
+            title="用户登录"
+            width="30%">
+            <el-form :model="loginForm" :rules="loginRules" ref="loginFormRef">
+                <el-form-item label="用户名" prop="username">
+                    <el-input v-model="loginForm.username" placeholder="请输入用户名"></el-input>
+                </el-form-item>
+                <el-form-item label="密码" prop="password">
+                    <el-input v-model="loginForm.password" type="password" placeholder="请输入密码"></el-input>
+                </el-form-item>
+            </el-form>
+            <template #footer>
+                <span class="dialog-footer">
+                    <el-button @click="loginDialogVisible = false">取消</el-button>
+                    <el-button type="primary" @click="handleLogin" :loading="loggingIn">
+                        登录
+                    </el-button>
+                </span>
+            </template>
+        </el-dialog>
+    </div>
+
+    <script>
+        const { createApp, ref, onMounted } = Vue
+        const app = createApp({
+            setup() {
+                // 商品信息
+                const goods = ref({
+                    imgUrl: '',
+                    name: '',
+                    price: 0,
+                    num: 0,
+                    sales: 0,
+                    desc: '',
+                    avgRating: 0
+                })
+                const goodsId = new URLSearchParams(window.location.search).get('id')
+
+                // 用户相关
+                const userId = 1 // 测试用户ID
+                const isLoggedIn = ref(true) // 默认已登录
+
+                // 评论相关
+                const comments = ref([])
+                const total = ref(0)
+                const currentPage = ref(1)
+                const pageSize = ref(10)
+                const submitting = ref(false)
+
+                // 评论表单
+                const commentFormRef = ref(null)
+                const commentForm = ref({
+                    rating: 5,
+                    content: ''
+                })
+                const commentRules = {
+                    rating: [
+                        { required: true, message: '请选择评分', trigger: 'change' }
+                    ],
+                    content: [
+                        { required: true, message: '请输入评论内容', trigger: 'blur' },
+                        { min: 5, message: '评论内容至少5个字符', trigger: 'blur' }
+                    ]
+                }
+
+                // 购物车相关
+                const cartDialogVisible = ref(false)
+                const addingToCart = ref(false)
+                const cartFormRef = ref(null)
+                const cartForm = ref({
+                    quantity: 1
+                })
+                const cartRules = {
+                    quantity: [
+                        { required: true, message: '请选择数量', trigger: 'change' },
+                        { type: 'number', min: 1, message: '数量必须大于0', trigger: 'change' }
+                    ]
+                }
+
+                // 登录相关
+                const loginDialogVisible = ref(false)
+                const loggingIn = ref(false)
+                const loginFormRef = ref(null)
+                const loginForm = ref({
+                    username: '',
+                    password: ''
+                })
+                const loginRules = {
+                    username: [
+                        { required: true, message: '请输入用户名', trigger: 'blur' },
+                        { min: 3, message: '用户名至少3个字符', trigger: 'blur' }
+                    ],
+                    password: [
+                        { required: true, message: '请输入密码', trigger: 'blur' },
+                        { min: 6, message: '密码至少6个字符', trigger: 'blur' }
+                    ]
+                }
+
+                // 加载商品信息和评论
+                const loadComments = async () => {
+                    try {
+                        const response = await fetch(
+                            `/api/comments/goods/${goodsId}?page=${currentPage.value}&size=${pageSize.value}`
+                        )
+                        if (!response.ok) throw new Error('获取评论失败')
+                        const data = await response.json()
+                        comments.value = data.comments.records
+                        total.value = data.comments.total
+                        goods.value = {
+                            ...data.goods,
+                            avgRating: data.avgRating
+                        }
+                    } catch (error) {
+                        ElMessage.error(error.message)
+                        console.error('Error:', error)
+                    }
+                }
+
+                // 提交评论
+                const submitComment = async () => {
+                    if (!commentFormRef.value) return
+                    await commentFormRef.value.validate(async (valid) => {
+                        if (valid) {
+                            submitting.value = true
+                            try {
+                                const response = await fetch('/api/comments', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify({
+                                        goodsId: goodsId,
+                                        userId: userId,
+                                        rating: commentForm.value.rating,
+                                        content: commentForm.value.content
+                                    })
+                                })
+                                
+                                if (!response.ok) throw new Error('提交评论失败')
+                                
+                                ElMessage.success('评论成功')
+                                commentForm.value.content = ''
+                                loadComments()
+                            } catch (error) {
+                                ElMessage.error(error.message)
+                                console.error('Error:', error)
+                            } finally {
+                                submitting.value = false
+                            }
+                        }
+                    })
+                }
+
+                // 显示加入购物车对话框
+                const showAddToCartDialog = () => {
+                    if (!isLoggedIn.value) {
+                        ElMessage.warning('请先登录')
+                        return
+                    }
+                    cartDialogVisible.value = true
+                }
+
+                // 加入购物车
+                const addToCart = async () => {
+                    if (!cartFormRef.value) return
+                    await cartFormRef.value.validate(async (valid) => {
+                        if (valid) {
+                            addingToCart.value = true
+                            try {
+                                const response = await fetch('/api/cart/add', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify({
+                                        goodsId: goodsId,
+                                        userId: userId,
+                                        quantity: cartForm.value.quantity
+                                    })
+                                })
+                                
+                                if (!response.ok) throw new Error('加入购物车失败')
+                                
+                                ElMessage.success('已加入购物车')
+                                cartDialogVisible.value = false
+                            } catch (error) {
+                                ElMessage.error(error.message)
+                                console.error('Error:', error)
+                            } finally {
+                                addingToCart.value = false
+                            }
+                        }
+                    })
+                }
+
+                // 分页处理
+                const handleSizeChange = (val) => {
+                    pageSize.value = val
+                    currentPage.value = 1
+                    loadComments()
+                }
+
+                const handleCurrentChange = (val) => {
+                    currentPage.value = val
+                    loadComments()
+                }
+
+                // 检查登录状态 - 移除原有的检查，直接使用固定用户
+                const checkLoginStatus = () => {
+                    isLoggedIn.value = true
+                }
+
+                // 显示登录对话框 - 由于使用固定用户，这个方法可以保留但不会被使用
+                const showLoginDialog = () => {
+                    loginDialogVisible.value = true
+                }
+
+                // 处理登录 - 由于使用固定用户，这个方法可以保留但不会被使用
+                const handleLogin = async () => {
+                    if (!loginFormRef.value) return
+                    await loginFormRef.value.validate(async (valid) => {
+                        if (valid) {
+                            loggingIn.value = true
+                            try {
+                                // 模拟登录成功
+                                isLoggedIn.value = true
+                                ElMessage.success('登录成功')
+                                loginDialogVisible.value = false
+                                loginForm.value = { username: '', password: '' }
+                            } catch (error) {
+                                ElMessage.error(error.message)
+                                console.error('Error:', error)
+                            } finally {
+                                loggingIn.value = false
+                            }
+                        }
+                    })
+                }
+
+                // 退出登录 - 由于使用固定用户，这个方法可以保留但不会被使用
+                const logout = async () => {
+                    try {
+                        isLoggedIn.value = false
+                        ElMessage.success('已退出登录')
+                    } catch (error) {
+                        ElMessage.error(error.message)
+                        console.error('Error:', error)
+                    }
+                }
+
+                // 删除评论
+                const deleteComment = async (commentId) => {
+                    try {
+                        const response = await fetch(`/api/comments/${commentId}?userId=${userId}`, {
+                            method: 'DELETE'
+                        })
+                        
+                        if (!response.ok) throw new Error('删除评论失败')
+                        
+                        ElMessage.success('评论已删除')
+                        loadComments() // 重新加载评论列表
+                    } catch (error) {
+                        ElMessage.error(error.message)
+                        console.error('Error:', error)
+                    }
+                }
+
+                onMounted(() => {
+                    if (!goodsId) {
+                        ElMessage.error('商品ID不能为空')
+                        return
+                    }
+                    loadComments()
+                    checkLoginStatus()
+                })
+
+                return {
+                    goods,
+                    comments,
+                    total,
+                    currentPage,
+                    pageSize,
+                    submitting,
+                    isLoggedIn,
+                    commentForm,
+                    commentFormRef,
+                    commentRules,
+                    cartDialogVisible,
+                    addingToCart,
+                    cartForm,
+                    cartFormRef,
+                    cartRules,
+                    submitComment,
+                    showAddToCartDialog,
+                    addToCart,
+                    handleSizeChange,
+                    handleCurrentChange,
+                    loginDialogVisible,
+                    loggingIn,
+                    loginForm,
+                    loginFormRef,
+                    loginRules,
+                    showLoginDialog,
+                    handleLogin,
+                    logout,
+                    userId, // 导出userId以供模板使用
+                    deleteComment, // 导出删除评论方法
+                }
+            }
+        })
+        app.use(ElementPlus)
+        app.mount('#app')
+    </script>
+</body>
+</html> 
