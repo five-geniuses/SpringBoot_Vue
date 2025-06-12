@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>购物车管理</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14"></script>
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        .cart-container {
+            width: 90%;
+            margin: 20px auto;
+        }
+        .cart-item {
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+        }
+        .cart-item img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+        }
+        .total-price {
+            font-size: 18px;
+            color: #f56c6c;
+            margin: 20px 0;
+        }
+        .operation-buttons {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="cart-container">
+        <el-card>
+            <div slot="header">
+                <span>我的购物车</span>
+                <el-button style="float: right; margin-left: 10px" 
+                         type="primary" 
+                         @click="showAddDialog">
+                    添加商品
+                </el-button>
+            </div>
+
+            <!-- 购物车列表 -->
+            <el-table :data="cartList" border style="width: 100%">
+                <el-table-column prop="goodsName" label="商品名称" width="180">
+                </el-table-column>
+                <el-table-column prop="price" label="单价" width="120">
+                    <template slot-scope="scope">
+                        ¥{{ scope.row.price }}
+                    </template>
+                </el-table-column>
+                <el-table-column prop="quantity" label="数量" width="200">
+                    <template slot-scope="scope">
+                        <el-input-number v-model="scope.row.quantity" 
+                                       :min="1" 
+                                       @change="updateQuantity(scope.row)">
+                        </el-input-number>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="totalPrice" label="小计" width="120">
+                    <template slot-scope="scope">
+                        ¥{{ scope.row.totalPrice }}
+                    </template>
+                </el-table-column>
+                <el-table-column label="操作" width="200">
+                    <template slot-scope="scope">
+                        <el-button size="mini" type="danger" @click="removeFromCart(scope.row.cartId)">删除</el-button>
+                        <el-button size="mini" type="primary" @click="createSingleOrder(scope.row)">下单</el-button>
+                    </template>
+                </el-table-column>
+            </el-table>
+
+            <!-- 总价和结算 -->
+            <div class="total-price">
+                总计: ¥{{ totalAmount }}
+            </div>
+            <div class="operation-buttons">
+                <el-button type="danger" @click="clearCart">清空购物车</el-button>
+                <el-button type="primary" @click="showCreateOrderDialog">去结算</el-button>
+            </div>
+        </el-card>
+
+        <!-- 添加商品对话框 -->
+        <el-dialog title="添加商品" :visible.sync="addDialogVisible">
+            <el-form :model="addForm" label-width="80px">
+                <el-form-item label="商品">
+                    <el-select v-model="addForm.goodsId" placeholder="请选择商品">
+                        <el-option v-for="item in goodsList"
+                                 :key="item.goodsId"
+                                 :label="item.name"
+                                 :value="item.goodsId">
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item label="数量">
+                    <el-input-number v-model="addForm.quantity" :min="1"></el-input-number>
+                </el-form-item>
+            </el-form>
+            <div slot="footer">
+                <el-button @click="addDialogVisible = false">取消</el-button>
+                <el-button type="primary" @click="addToCart">确定</el-button>
+            </div>
+        </el-dialog>
+
+        <!-- 创建订单对话框 -->
+        <el-dialog title="创建订单" :visible.sync="orderDialogVisible">
+            <el-form :model="orderForm" label-width="100px">
+                <el-form-item label="收货人姓名">
+                    <el-input v-model="orderForm.receiverName"></el-input>
+                </el-form-item>
+                <el-form-item label="联系电话">
+                    <el-input v-model="orderForm.receiverPhone"></el-input>
+                </el-form-item>
+                <el-form-item label="收货地址">
+                    <el-input type="textarea" v-model="orderForm.receiverAddress"></el-input>
+                </el-form-item>
+                <el-form-item label="订单备注">
+                    <el-input type="textarea" v-model="orderForm.remark"></el-input>
+                </el-form-item>
+            </el-form>
+            <div slot="footer">
+                <el-button @click="orderDialogVisible = false">取消</el-button>
+                <el-button type="primary" @click="createOrder">提交订单</el-button>
+            </div>
+        </el-dialog>
+
+        <!-- 单个商品下单对话框 -->
+        <el-dialog title="创建订单" :visible.sync="singleOrderDialogVisible">
+            <el-form :model="orderForm" label-width="120px">
+                <el-form-item label="商品名称">
+                    <span>{{ currentCartItem ? currentCartItem.goodsName : '' }}</span>
+                </el-form-item>
+                <el-form-item label="数量">
+                    <span>{{ currentCartItem ? currentCartItem.quantity : '' }}</span>
+                </el-form-item>
+                <el-form-item label="总价">
+                    <span>{{ currentCartItem ? currentCartItem.totalPrice : '' }}</span>
+                </el-form-item>
+                <el-form-item label="收货人姓名">
+                    <el-input v-model="orderForm.receiverName"></el-input>
+                </el-form-item>
+                <el-form-item label="收货人电话">
+                    <el-input v-model="orderForm.receiverPhone"></el-input>
+                </el-form-item>
+                <el-form-item label="收货地址">
+                    <el-input v-model="orderForm.receiverAddress"></el-input>
+                </el-form-item>
+                <el-form-item label="备注">
+                    <el-input v-model="orderForm.remark" type="textarea"></el-input>
+                </el-form-item>
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+                <el-button @click="singleOrderDialogVisible = false">取消</el-button>
+                <el-button type="primary" @click="submitSingleOrder">确定</el-button>
+            </div>
+        </el-dialog>
+    </div>
+
+    <script>
+        new Vue({
+            el: '#app',
+            data() {
+                return {
+                    userId: 1, // 当前用户ID
+                    cartList: [],
+                    goodsList: [],
+                    addDialogVisible: false,
+                    orderDialogVisible: false,
+                    singleOrderDialogVisible: false,
+                    currentCartItem: null,
+                    addForm: {
+                        goodsId: '',
+                        quantity: 1
+                    },
+                    orderForm: {
+                        receiverName: '',
+                        receiverPhone: '',
+                        receiverAddress: '',
+                        remark: ''
+                    }
+                }
+            },
+            computed: {
+                totalAmount() {
+                    return this.cartList.reduce((sum, item) => sum + parseFloat(item.totalPrice), 0).toFixed(2);
+                }
+            },
+            created() {
+                this.loadCartList();
+                this.loadGoodsList();
+            },
+            methods: {
+                // 加载购物车列表
+                loadCartList() {
+                    axios.get(`/api/cart/list/${this.userId}`).then(response => {
+                        this.cartList = response.data;
+                    }).catch(error => {
+                        this.$message.error('加载购物车失败：' + error.message);
+                    });
+                },
+                // 加载商品列表
+                loadGoodsList() {
+                    axios.get('/api/goods/search')
+                        .then(response => {
+                            this.goodsList = response.data.filter(goods => 
+                                goods.num > 0 && goods.state === 1
+                            );
+                        })
+                        .catch(error => {
+                            this.$message.error('加载商品列表失败：' + error.message);
+                        });
+                },
+                // 显示添加商品对话框
+                showAddDialog() {
+                    this.addDialogVisible = true;
+                    this.addForm = {
+                        goodsId: '',
+                        quantity: 1
+                    };
+                },
+                // 添加商品到购物车
+                addToCart() {
+                    if (!this.addForm.goodsId) {
+                        this.$message.warning('请选择商品');
+                        return;
+                    }
+                    if (this.addForm.quantity <= 0) {
+                        this.$message.warning('请输入正确的商品数量');
+                        return;
+                    }
+
+                    const params = new URLSearchParams();
+                    params.append('userId', this.userId);
+                    params.append('goodsId', this.addForm.goodsId);
+                    params.append('quantity', this.addForm.quantity);
+                    
+                    axios.post('/api/cart/add', params)
+                        .then(response => {
+                            if (response.data === true) {
+                                this.$message.success('添加成功');
+                                this.addDialogVisible = false;
+                                this.loadCartList();
+                            } else {
+                                this.$message.error('添加失败');
+                            }
+                        })
+                        .catch(error => {
+                            this.$message.error('添加失败：' + error.message);
+                        });
+                },
+                // 更新商品数量
+                updateQuantity(item) {
+                    if (item.quantity <= 0) {
+                        this.$message.warning('商品数量必须大于0');
+                        this.loadCartList();
+                        return;
+                    }
+
+                    const params = new URLSearchParams();
+                    params.append('cartId', item.cartId);
+                    params.append('quantity', item.quantity);
+                    
+                    axios.put('/api/cart/update', params)
+                        .then(response => {
+                            if (response.data === true) {
+                                this.$message.success('更新成功');
+                                this.loadCartList();
+                            } else {
+                                this.$message.error('更新失败');
+                                this.loadCartList();
+                            }
+                        })
+                        .catch(error => {
+                            this.$message.error('更新失败：' + error.message);
+                            this.loadCartList();
+                        });
+                },
+                // 从购物车中删除商品
+                removeFromCart(cartId) {
+                    this.$confirm('确定要删除该商品吗？', '提示', {
+                        type: 'warning'
+                    }).then(() => {
+                        axios.delete(`/api/cart/remove/${cartId}`)
+                            .then(response => {
+                                if (response.data === true) {
+                                    this.$message.success('删除成功');
+                                    this.loadCartList();
+                                } else {
+                                    this.$message.error('删除失败');
+                                }
+                            })
+                            .catch(error => {
+                                this.$message.error('删除失败：' + error.message);
+                            });
+                    });
+                },
+                // 清空购物车
+                clearCart() {
+                    this.$confirm('确定要清空购物车吗？', '提示', {
+                        type: 'warning'
+                    }).then(() => {
+                        axios.delete(`/api/cart/clear/${this.userId}`)
+                            .then(response => {
+                                if (response.data === true) {
+                                    this.$message.success('清空成功');
+                                    this.loadCartList();
+                                } else {
+                                    this.$message.error('清空失败');
+                                }
+                            })
+                            .catch(error => {
+                                this.$message.error('清空失败：' + error.message);
+                            });
+                    });
+                },
+                // 显示创建订单对话框
+                showCreateOrderDialog() {
+                    if (this.cartList.length === 0) {
+                        this.$message.warning('购物车为空');
+                        return;
+                    }
+                    this.orderDialogVisible = true;
+                    this.orderForm = {
+                        receiverName: '',
+                        receiverPhone: '',
+                        receiverAddress: '',
+                        remark: ''
+                    };
+                },
+                // 创建订单
+                createOrder() {
+                    if (!this.orderForm.receiverName || !this.orderForm.receiverPhone || !this.orderForm.receiverAddress) {
+                        this.$message.warning('请填写完整的收货信息');
+                        return;
+                    }
+
+                    const cartIds = this.cartList.map(item => item.cartId);
+                    const params = new URLSearchParams();
+                    params.append('userId', this.userId);
+                    params.append('receiverName', this.orderForm.receiverName);
+                    params.append('receiverPhone', this.orderForm.receiverPhone);
+                    params.append('receiverAddress', this.orderForm.receiverAddress);
+                    params.append('remark', this.orderForm.remark);
+                    cartIds.forEach(id => params.append('cartIds', id));
+                    
+                    axios.post('/api/orders/create', params)
+                        .then(response => {
+                            this.$message.success('订单创建成功');
+                            this.orderDialogVisible = false;
+                            this.loadCartList();
+                        })
+                        .catch(error => {
+                            this.$message.error('创建订单失败：' + error.message);
+                        });
+                },
+                // 创建单个商品订单
+                createSingleOrder(cartItem) {
+                    this.currentCartItem = cartItem;
+                    this.singleOrderDialogVisible = true;
+                    this.orderForm = {
+                        receiverName: '',
+                        receiverPhone: '',
+                        receiverAddress: '',
+                        remark: ''
+                    };
+                },
+                // 提交单个商品订单
+                submitSingleOrder() {
+                    if (!this.orderForm.receiverName || !this.orderForm.receiverPhone || !this.orderForm.receiverAddress) {
+                        this.$message.warning('请填写完整的收货信息');
+                        return;
+                    }
+
+                    const params = new URLSearchParams();
+                    params.append('userId', this.userId);
+                    params.append('receiverName', this.orderForm.receiverName);
+                    params.append('receiverPhone', this.orderForm.receiverPhone);
+                    params.append('receiverAddress', this.orderForm.receiverAddress);
+                    params.append('remark', this.orderForm.remark);
+                    params.append('cartIds', this.currentCartItem.cartId);
+                    
+                    axios.post('/api/orders/create', params)
+                        .then(response => {
+                            this.$message.success('订单创建成功');
+                            this.singleOrderDialogVisible = false;
+                            this.loadCartList();
+                        })
+                        .catch(error => {
+                            this.$message.error('创建订单失败：' + error.message);
+                        });
+                }
+            }
+        });
+    </script>
+</body>
+</html>
