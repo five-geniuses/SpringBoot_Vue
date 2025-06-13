@@ -4,11 +4,32 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="56bcffa8-c84d-42cb-84de-83bf9b8891e9" name="更改" comment="" />
+    <list default="true" id="56bcffa8-c84d-42cb-84de-83bf9b8891e9" name="更改" comment="test">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HELP.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/controller/AdminController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/controller/AdminController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/controller/UserController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/controller/UserController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/entity/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/entity/User.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/service/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/service/UserService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/emo/chen/controller/UserController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/emo/chen/controller/UserController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/emo/chen/entity/User.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/emo/chen/entity/User.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/emo/chen/service/UserService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/emo/chen/service/UserService.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/emo/chen/service/impl/UserServiceImpl.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/emo/chen/service/impl/UserServiceImpl.class" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
@@ -35,6 +56,7 @@
   </component>
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
+    &quot;JavaScript 调试.goodsTest.html.executor&quot;: &quot;Run&quot;,
     &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
     &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
     &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
@@ -56,7 +78,10 @@
     ]
   }
 }</component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Spring Boot.ChenApplication">
+    <configuration name="goodsTest.html" type="JavascriptDebugType" temporary="true" nameIsGenerated="true" uri="http://localhost:63342/chen/chen/src/main/resources/static/goodsTest.html" useBuiltInWebServerPort="true">
+      <method v="2" />
+    </configuration>
     <configuration name="ChenApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
       <module name="chen" />
       <option name="SPRING_BOOT_MAIN_CLASS" value="emo.chen.ChenApplication" />
@@ -85,7 +110,39 @@
       <workItem from="1749480260303" duration="1396000" />
       <workItem from="1749486640215" duration="4068000" />
       <workItem from="1749517948160" duration="3546000" />
+      <workItem from="1749524049253" duration="397000" />
+      <workItem from="1749524584855" duration="2039000" />
+      <workItem from="1749526688298" duration="28000" />
+      <workItem from="1749527528435" duration="1738000" />
+      <workItem from="1749537302735" duration="4153000" />
+      <workItem from="1749541606793" duration="1493000" />
+      <workItem from="1749544166742" duration="1109000" />
+      <workItem from="1749604098420" duration="11303000" />
+      <workItem from="1749624867439" duration="5000" />
+      <workItem from="1749625134324" duration="239000" />
+      <workItem from="1749625387600" duration="191000" />
+      <workItem from="1749626174814" duration="3080000" />
+      <workItem from="1749640551137" duration="1572000" />
+      <workItem from="1749658601797" duration="2578000" />
+      <workItem from="1749691469800" duration="3588000" />
+      <workItem from="1749695164782" duration="4000" />
+      <workItem from="1749695227793" duration="26000" />
+      <workItem from="1749695593256" duration="2881000" />
+      <workItem from="1749707660765" duration="2507000" />
+      <workItem from="1749710422104" duration="1003000" />
+      <workItem from="1749711659179" duration="1206000" />
+      <workItem from="1749721438504" duration="6072000" />
+      <workItem from="1749777803135" duration="1462000" />
     </task>
+    <task id="LOCAL-00001" summary="user模块">
+      <option name="closed" value="true" />
+      <created>1749524267744</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1749524267745</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -103,6 +160,7 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <option name="LAST_COMMIT_MESSAGE" value="" />
+    <MESSAGE value="user模块" />
+    <option name="LAST_COMMIT_MESSAGE" value="user模块" />
   </component>
 </project>

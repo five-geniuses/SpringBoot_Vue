@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpSession;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -50,7 +50,7 @@ public class AdminController {
         if (userService.deleteUser(id)) {
             return ResponseEntity.ok("删除成功");
         }
-        return ResponseEntity.badRequest().body("删除失败，可能是管理员账号或用户不存在");
+        return ResponseEntity.badRequest().body("删除失败");
     }
 
     @PutMapping("/user/{id}")
@@ -58,7 +58,7 @@ public class AdminController {
         if (!isAdmin(session)) {
             return ResponseEntity.badRequest().body("无权限访问");
         }
-        user.setId(id);
+        user.setUserId(id);
         if (userService.updateUser(user)) {
             return ResponseEntity.ok("更新成功");
         }
