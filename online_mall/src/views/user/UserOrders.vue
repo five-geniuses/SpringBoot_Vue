@@ -512,6 +512,14 @@
         <el-button @click="viewCommentVisible = false">关闭</el-button>
       </template>
     </el-dialog>
+
+    <!-- 添加支付对话框 -->
+    <payment-dialog
+      v-model:visible="paymentDialogVisible"
+      :order-info="currentPayOrder"
+      @pay-success="handlePaySuccess"
+      @pay-cancel="handlePayCancel"
+    />
   </div>
 </template>
 
@@ -528,6 +536,9 @@ import {
   Star, 
   ShoppingBag 
 } from '@element-plus/icons-vue'
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
+import PaymentDialog from '@/components/PaymentDialog.vue'
 
 // 类型定义
 interface OrderItem {
@@ -641,6 +652,13 @@ const total = ref(0)
 const userInfoString = sessionStorage.getItem('Atuserinfo')
 const userInfo = userInfoString ? JSON.parse(userInfoString) : null
 const userId = ref(userInfo?.userId || null)
+
+// 支付相关状态
+const paymentDialogVisible = ref(false)
+const currentPayOrder = ref({
+  orderNo: '',
+  totalAmount: 0
+})
 
 // 将订单按订单号分组
 const groupedOrders = computed<GroupedOrder[]>(() => {
@@ -1003,55 +1021,12 @@ const cancelOrder = async (orderGroup: GroupedOrder) => {
 }
 
 // 支付订单
-const payOrder = async (orderGroup: GroupedOrder) => {
-  try {
-    await ElMessageBox.confirm(
-      `确定要支付订单吗？订单金额：¥${orderGroup.totalAmount}`, 
-      '确认支付', 
-      {
-        confirmButtonText: '确认支付',
-        cancelButtonText: '取消',
-        type: 'info',
-        confirmButtonClass: 'el-button--success'
-      }
-    )
-    
-    // 显示支付加载状态
-    const loadingInstance = ElLoading.service({
-      lock: true,
-      text: '正在处理支付...',
-      background: 'rgba(0, 0, 0, 0.7)'
-    })
-    
-    const response = await fetch(`/api/api/orders/pay/${orderGroup.orderNo}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      }
-    })
-    
-    loadingInstance.close()
-    
-    if (!response.ok) {
-      throw new Error('支付失败')
-    }
-    
-    const result = await response.json()
-    
-    if (result === true || result.success !== false) {
-      ElMessage.success('支付成功！')
-      // 刷新订单列表
-      await fetchOrders()
-    } else {
-      throw new Error(result.message || '支付失败')
-    }
-    
-  } catch (error) {
-    if (error !== 'cancel') {
-      console.error('支付失败:', error)
-      ElMessage.error((error as Error).message || '支付失败，请稍后重试')
-    }
+const payOrder = (orderGroup: GroupedOrder) => {
+  currentPayOrder.value = {
+    orderNo: orderGroup.orderNo,
+    totalAmount: orderGroup.totalAmount
   }
+  paymentDialogVisible.value = true
 }
 
 // 确认收货
@@ -1223,6 +1198,70 @@ const handleSizeChange = (size: number) => {
 // 跳转到商品页面
 const goToProducts = () => {
   router.push('/user/product/list')
+}
+
+// 处理支付成功
+const handlePaySuccess = async () => {
+  try {
+    // 开始轮询支付状态
+    await pollPaymentStatus(currentPayOrder.value.orderNo)
+  } catch (error) {
+    console.error('支付状态查询失败：', error)
+    ElMessage.error('支付状态查询失败，请刷新页面查看最新状态')
+  }
+}
+
+// 轮询支付状态
+const pollPaymentStatus = async (orderNo: string) => {
+  const maxAttempts = 12 // 最多轮询12次
+  const interval = 5000 // 每5秒查询一次
+  let attempts = 0
+
+  const checkStatus = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/pay/status/${orderNo}`)
+      if (!response.ok) {
+        throw new Error('查询支付状态失败')
+      }
+
+      const result = await response.json()
+      
+      if (result.code === 200 && result.data) {
+        if (result.data.payState === 1) {
+          // 支付成功
+          ElMessage.success('支付成功！')
+          await fetchOrders() // 刷新订单列表
+          return true
+        }
+      }
+      
+      return false
+    } catch (error) {
+      console.error('查询支付状态出错：', error)
+      return false
+    }
+  }
+
+  while (attempts < maxAttempts) {
+    const isSuccess = await checkStatus()
+    if (isSuccess) {
+      break
+    }
+    
+    attempts++
+    if (attempts < maxAttempts) {
+      await new Promise(resolve => setTimeout(resolve, interval))
+    }
+  }
+
+  if (attempts >= maxAttempts) {
+    ElMessage.warning('支付状态查询超时，请刷新页面查看最新状态')
+  }
+}
+
+// 处理支付取消
+const handlePayCancel = () => {
+  ElMessage.info('已取消支付')
 }
 
 // 组件挂载时获取数据

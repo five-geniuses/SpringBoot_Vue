@@ -5,96 +5,16 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="56bcffa8-c84d-42cb-84de-83bf9b8891e9" name="更改" comment="ending">
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/encodings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/jarRepositories.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/jarRepositories.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/商品模块接口文档.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/商品模块接口文档.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/用户模块接口文档.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/用户模块接口文档.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/系统设计文档.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/系统设计文档.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/订单模块接口文档.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/订单模块接口文档.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/购物车模块接口文档.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/购物车模块接口文档.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/通用说明.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/通用说明.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mvnw" beforeDir="false" afterPath="$PROJECT_DIR$/mvnw" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mvnw.cmd" beforeDir="false" afterPath="$PROJECT_DIR$/mvnw.cmd" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/ChenApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/ChenApplication.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/config/AlipayConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/config/AlipayConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/config/MybatisPlusConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/config/MybatisPlusConfig.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/config/WebConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/config/WebConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/controller/AdminController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/controller/AdminController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/controller/CartController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/controller/CartController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/controller/CategoryController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/controller/CategoryController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/controller/CommentController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/controller/CommentController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/controller/GoodsController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/controller/GoodsController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/controller/OrderController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/controller/OrderController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/controller/PayController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/controller/PayController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/controller/RecommendController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/controller/RecommendController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/controller/UploadController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/controller/UploadController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/controller/UserController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/controller/UserController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/entity/Cart.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/entity/Cart.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/entity/Category.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/entity/Category.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/entity/Comment.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/entity/Comment.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/entity/Goods.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/entity/Goods.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/entity/Order.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/entity/Order.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/entity/OrderItem.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/entity/OrderItem.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/entity/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/entity/User.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/mapper/CartMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/mapper/CartMapper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/mapper/CategoryMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/mapper/CategoryMapper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/mapper/CommentMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/mapper/CommentMapper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/mapper/GoodsMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/mapper/GoodsMapper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/mapper/OrderItemMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/mapper/OrderItemMapper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/mapper/OrderMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/mapper/OrderMapper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/service/CartService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/service/CartService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/service/CategoryService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/service/CategoryService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/service/CommentService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/service/CommentService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/service/GoodsService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/service/GoodsService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/service/PayService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/service/PayService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/service/RecommendService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/service/RecommendService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/service/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/service/UserService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/service/impl/CartServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/service/impl/CartServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/service/impl/CategoryServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/service/impl/CategoryServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/service/impl/CommentServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/service/impl/CommentServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/service/impl/GoodsServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/service/impl/GoodsServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/service/impl/OrderServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/service/impl/OrderServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/service/impl/PayServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/service/impl/PayServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/service/impl/RecommendServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/service/impl/RecommendServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/emo/chen/service/impl/UserServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/emo/chen/service/impl/UserServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/apiTest.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/apiTest.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/cartTest.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/cartTest.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/goodsDetail.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/goodsTest.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/orderTest.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/orderTest.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/payResult.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/payTest.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/emo/chen/ChenApplicationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/emo/chen/ChenApplicationTests.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/components/PaymentComponent.vue" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/components/PaymentResult.vue" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/emo/chen/config/WebConfig.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/emo/chen/config/WebConfig.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/classes/emo/chen/controller/PayController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/emo/chen/controller/PayController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/emo/chen/mapper/OrderMapper.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/emo/chen/mapper/OrderMapper.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/emo/chen/service/OrderService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/emo/chen/service/OrderService.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/emo/chen/service/impl/OrderServiceImpl.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/emo/chen/service/impl/OrderServiceImpl.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/emo/chen/service/impl/PayServiceImpl.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/emo/chen/service/impl/PayServiceImpl.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/static/apiTest.html" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/static/apiTest.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/static/cartTest.html" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/static/cartTest.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/static/goodsDetail.html" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/static/goodsDetail.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/static/goodsTest.html" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/static/goodsTest.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/static/orderTest.html" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/static/orderTest.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/static/payResult.html" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/static/payResult.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../online_mall/.history/src/views/user/UserOrders_20250617192552.vue" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../online_mall/.history/src/views/user/UserOrders_20250617192628.vue" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../online_mall/src/router/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../online_mall/src/router/index.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../online_mall/src/views/admin/OrderManagement.vue" beforeDir="false" afterPath="$PROJECT_DIR$/../online_mall/src/views/admin/OrderManagement.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../online_mall/src/views/admin/ProductManagement.vue" beforeDir="false" afterPath="$PROJECT_DIR$/../online_mall/src/views/admin/ProductManagement.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../online_mall/src/views/user/ProductComments.vue" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../online_mall/src/views/user/ProductDetail.vue" beforeDir="false" afterPath="$PROJECT_DIR$/../online_mall/src/views/user/ProductDetail.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../online_mall/src/views/user/UserCart.vue" beforeDir="false" afterPath="$PROJECT_DIR$/../online_mall/src/views/user/UserCart.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/static/components/PaymentComponent.vue" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/static/components/PaymentResult.vue" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/../online_mall/src/views/user/UserOrders.vue" beforeDir="false" afterPath="$PROJECT_DIR$/../online_mall/src/views/user/UserOrders.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../online_mall/src/views/user/UserRecharge.vue" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../online_mall/vite.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../online_mall/vite.config.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -227,7 +147,7 @@
       <workItem from="1750169098462" duration="1692000" />
       <workItem from="1750171521326" duration="7424000" />
       <workItem from="1750210746280" duration="1277000" />
-      <workItem from="1750231148097" duration="578000" />
+      <workItem from="1750231148097" duration="3674000" />
     </task>
     <task id="LOCAL-00001" summary="user模块">
       <option name="closed" value="true" />
