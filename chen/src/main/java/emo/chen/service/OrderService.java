@@ -63,4 +63,18 @@ public interface OrderService extends IService<Order> {
      * @return 验证结果
      */
     boolean verifyOrderAmount(String orderNo, String amount);
+
+    /**
+     * 根据订单号获取订单信息
+     * @param orderNo 订单号
+     * @return 订单信息
+     */
+    Order getOrderByOrderNo(String orderNo);
+
+    /**
+     * 更新订单信息
+     * @param order 订单信息
+     * @return 更新结果
+     */
+    boolean updateOrder(Order order);
 } 

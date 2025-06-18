@@ -25,10 +25,16 @@
         .status-tag {
             margin-right: 10px;
         }
+        #payForm {
+            display: none;
+        }
     </style>
 </head>
 <body>
     <div id="app" class="order-container">
+        <!-- 支付宝表单容器 -->
+        <div id="payForm"></div>
+
         <el-card>
             <div slot="header">
                 <span>订单管理</span>
@@ -87,8 +93,8 @@
                         <el-button v-if="scope.row.orderState === 0"
                                  type="primary" 
                                  size="small" 
-                                 @click="payOrder(scope.row)">
-                            付款
+                                 @click="handleAlipayPayment(scope.row)">
+                            支付宝支付
                         </el-button>
                         <el-button v-if="scope.row.orderState === 0 || scope.row.orderState === 1"
                                  type="danger" 
@@ -183,11 +189,18 @@
                     total: 0,
                     detailDialogVisible: false,
                     currentOrder: {},
-                    orderItems: []
+                    orderItems: [],
+                    // 支付相关配置
+                    payConfig: {
+                        returnUrl: window.location.origin + '/payResult.html', // 支付完成后的跳转页面
+                        payFormContainer: 'payForm' // 支付表单容器ID
+                    }
                 }
             },
             created() {
                 this.loadOrders();
+                // 检查是否有支付结果返回
+                this.checkPaymentResult();
             },
             methods: {
                 // 加载订单列表
@@ -225,16 +238,66 @@
                     };
                     return typeMap[status] || '';
                 },
-                // 支付订单
-                payOrder(order) {
-                    this.$confirm('确定要支付该订单吗？', '提示', {
+                // 处理支付宝支付
+                handleAlipayPayment(order) {
+                    this.$confirm('确定要使用支付宝支付该订单吗？', '提示', {
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
                         type: 'warning'
                     }).then(() => {
-                        axios.post(`/api/orders/pay/${order.orderNo}`).then(() => {
-                            this.$message.success('支付成功');
-                            this.loadOrders();
-                        });
+                        // 创建支付宝订单
+                        const payData = {
+                            outTradeNo: order.orderNo,
+                            totalAmount: order.totalAmount.toString(),
+                            subject: `订单${order.orderNo}`,
+                            returnUrl: this.payConfig.returnUrl
+                        };
+
+                        axios.post('/api/pay/create', payData)
+                            .then(response => {
+                                if (response.data.code === 200) {
+                                    // 将支付宝返回的表单插入到页面中
+                                    document.getElementById(this.payConfig.payFormContainer).innerHTML = response.data.data;
+                                    // 自动提交表单
+                                    const form = document.querySelector('#' + this.payConfig.payFormContainer + ' form');
+                                    if (form) {
+                                        form.submit();
+                                    } else {
+                                        this.$message.error('支付表单加载失败');
+                                    }
+                                } else {
+                                    this.$message.error(response.data.message || '创建支付订单失败');
+                                }
+                            })
+                            .catch(error => {
+                                this.$message.error('创建支付订单失败：' + error.message);
+                            });
                     });
+                },
+                // 检查支付结果
+                checkPaymentResult() {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const orderNo = urlParams.get('out_trade_no');
+                    
+                    if (orderNo) {
+                        // 查询支付状态
+                        axios.get(`/api/pay/status/${orderNo}`)
+                            .then(response => {
+                                if (response.data.code === 200) {
+                                    const payState = response.data.data.payState;
+                                    if (payState === 1) {
+                                        this.$message.success('支付成功');
+                                    } else {
+                                        this.$message.warning('等待支付');
+                                    }
+                                    // 刷新订单列表
+                                    this.loadOrders();
+                                }
+                            })
+                            .catch(error => {
+                                this.$message.error('查询支付状态失败：' + error.message);
+                            });
+                    }
                 },
                 // 取消订单
                 cancelOrder(order) {

@@ -401,6 +401,19 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
     }
 
+    @Override
+    public Order getOrderByOrderNo(String orderNo) {
+        return getOrderByNo(orderNo);
+    }
+
+    @Override
+    public boolean updateOrder(Order order) {
+        if (order == null || order.getOrderNo() == null) {
+            return false;
+        }
+        return updateById(order);
+    }
+
     private Order getOrderByNo(String orderNo) {
         QueryWrapper<Order> wrapper = new QueryWrapper<>();
         wrapper.eq("order_no", orderNo);

@@ -6,12 +6,17 @@ import com.alipay.api.DefaultAlipayClient;
 import com.alipay.api.internal.util.AlipaySignature;
 import com.alipay.api.request.AlipayTradePagePayRequest;
 import emo.chen.config.AlipayConfig;
+import emo.chen.entity.Order;
+import emo.chen.service.OrderService;
 import emo.chen.service.PayService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Map;
 
 @Service
@@ -19,15 +24,29 @@ public class PayServiceImpl implements PayService {
     private static final Logger logger = LoggerFactory.getLogger(PayServiceImpl.class);
 
     private final AlipayConfig alipayConfig;
+    private final OrderService orderService;
 
     @Autowired
-    public PayServiceImpl(AlipayConfig alipayConfig) {
+    public PayServiceImpl(AlipayConfig alipayConfig, OrderService orderService) {
         this.alipayConfig = alipayConfig;
+        this.orderService = orderService;
     }
 
     @Override
     public String createAlipayOrder(String outTradeNo, String totalAmount, String subject, String returnUrl) {
         try {
+            // 验证订单信息
+            Order order = orderService.getOrderByOrderNo(outTradeNo);
+            if (order == null) {
+                throw new RuntimeException("订单不存在");
+            }
+            if (order.getPayState() == 1) {
+                throw new RuntimeException("订单已支付");
+            }
+            if (!order.getTotalAmount().toString().equals(totalAmount)) {
+                throw new RuntimeException("订单金额不匹配");
+            }
+
             // 创建AlipayClient
             AlipayClient alipayClient = new DefaultAlipayClient(
                 alipayConfig.getGatewayUrl(),
@@ -65,6 +84,7 @@ public class PayServiceImpl implements PayService {
     }
 
     @Override
+    @Transactional
     public String handleAlipayNotify(Map<String, String> params) {
         try {
             // 验证签名
@@ -82,13 +102,37 @@ public class PayServiceImpl implements PayService {
                 String tradeNo = params.get("trade_no");
                 // 交易状态
                 String tradeStatus = params.get("trade_status");
+                // 支付金额
+                String totalAmount = params.get("total_amount");
 
                 logger.info("收到支付宝回调通知 - 订单号：{}，支付宝交易号：{}，交易状态：{}", 
                     outTradeNo, tradeNo, tradeStatus);
 
                 if ("TRADE_SUCCESS".equals(tradeStatus)) {
-                    // TODO: 更新业务订单状态
-                    logger.info("订单支付成功 - 订单号：{}", outTradeNo);
+                    // 获取订单信息
+                    Order order = orderService.getOrderByOrderNo(outTradeNo);
+                    if (order == null) {
+                        logger.error("订单不存在 - 订单号：{}", outTradeNo);
+                        return "failure";
+                    }
+
+                    // 验证订单金额
+                    if (!order.getTotalAmount().equals(new BigDecimal(totalAmount))) {
+                        logger.error("订单金额不匹配 - 订单号：{}，支付金额：{}，订单金额：{}", 
+                            outTradeNo, totalAmount, order.getTotalAmount());
+                        return "failure";
+                    }
+
+                    // 更新订单状态
+                    order.setPayState(1); // 设置为已支付
+                    order.setOrderState(1); // 设置为待发货状态
+                    order.setPayTime(LocalDateTime.now());
+                    order.setUpdateTime(LocalDateTime.now());
+                    
+                    // 保存订单更新
+                    orderService.updateOrder(order);
+                    
+                    logger.info("订单支付成功并更新状态 - 订单号：{}", outTradeNo);
                     return "success";
                 }
             } else {
