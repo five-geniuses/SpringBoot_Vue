@@ -7,10 +7,10 @@ import java.util.List;
 
 public interface CartService extends IService<Cart> {
     // 添加商品到购物车
-    boolean addToCart(Integer userId, Integer goodsId, Integer quantity);
+    Cart addToCart(Integer userId, Integer goodsId, Integer quantity);
     
     // 更新购物车商品数量
-    boolean updateQuantity(Integer cartId, Integer quantity);
+    Cart updateQuantity(Integer cartId, Integer quantity);
     
     // 删除购物车商品
     boolean removeFromCart(Integer cartId);

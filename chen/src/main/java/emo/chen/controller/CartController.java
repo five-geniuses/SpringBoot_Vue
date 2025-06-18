@@ -17,50 +17,59 @@ public class CartController {
     @Autowired
     private CartService cartService;
 
+    // 统一响应格式
+    private Map<String, Object> createResponse(boolean success, String message, Object data) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", success);
+        response.put("message", message);
+        response.put("data", data);
+        return response;
+    }
+
     @PostMapping("/add")
-    public ResponseEntity<?> addToCart(@RequestBody Map<String, Object> request) {
+    public ResponseEntity<?> addToCart(@RequestBody Map<String, Object> params) {
         try {
-            // 从请求体中获取参数
-            Integer userId = Integer.valueOf(request.get("userId").toString());
-            Integer goodsId = Integer.valueOf(request.get("goodsId").toString());
-            Integer quantity = Integer.valueOf(request.get("quantity").toString());
+            Integer userId = (Integer) params.get("userId");
+            Integer goodsId = (Integer) params.get("goodsId");
+            Integer quantity = (Integer) params.get("quantity");
 
-            // 参数验证
-            if (userId == null || goodsId == null || quantity == null) {
-                return ResponseEntity.badRequest().body(createResponse(false, "缺少必要参数"));
+            if (userId == null || goodsId == null || quantity == null || quantity <= 0) {
+                return ResponseEntity.badRequest().body(
+                    createResponse(false, "参数错误", null)
+                );
             }
 
-            if (quantity <= 0) {
-                return ResponseEntity.badRequest().body(createResponse(false, "商品数量必须大于0"));
-            }
-
-            boolean result = cartService.addToCart(userId, goodsId, quantity);
-            if (!result) {
-                return ResponseEntity.badRequest().body(createResponse(false, "加入购物车失败"));
-            }
-            
-            return ResponseEntity.ok(createResponse(true, "成功加入购物车"));
+            Cart result = cartService.addToCart(userId, goodsId, quantity);
+            return ResponseEntity.ok(
+                createResponse(true, "添加成功", result)
+            );
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(createResponse(false, "加入购物车失败：" + e.getMessage()));
+            return ResponseEntity.badRequest().body(
+                createResponse(false, e.getMessage(), null)
+            );
         }
     }
 
     @PutMapping("/update")
-    public ResponseEntity<?> updateQuantity(@RequestParam(required = true) Integer cartId,
-                                          @RequestParam(required = true) Integer quantity) {
+    public ResponseEntity<?> updateQuantity(@RequestBody Map<String, Object> params) {
         try {
-            if (quantity <= 0) {
-                return ResponseEntity.badRequest().body(createResponse(false, "商品数量必须大于0"));
+            Integer cartId = (Integer) params.get("cartId");
+            Integer quantity = (Integer) params.get("quantity");
+
+            if (cartId == null || quantity == null || quantity <= 0) {
+                return ResponseEntity.badRequest().body(
+                    createResponse(false, "参数错误", null)
+                );
             }
 
-            boolean result = cartService.updateQuantity(cartId, quantity);
-            if (!result) {
-                return ResponseEntity.badRequest().body(createResponse(false, "更新购物车失败"));
-            }
-            
-            return ResponseEntity.ok(createResponse(true, "购物车更新成功"));
+            Cart result = cartService.updateQuantity(cartId, quantity);
+            return ResponseEntity.ok(
+                createResponse(true, "更新成功", result)
+            );
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(createResponse(false, "更新购物车失败：" + e.getMessage()));
+            return ResponseEntity.badRequest().body(
+                createResponse(false, e.getMessage(), null)
+            );
         }
     }
 
@@ -68,13 +77,13 @@ public class CartController {
     public ResponseEntity<?> removeFromCart(@PathVariable Integer cartId) {
         try {
             boolean result = cartService.removeFromCart(cartId);
-            if (!result) {
-                return ResponseEntity.badRequest().body(createResponse(false, "删除购物车商品失败"));
-            }
-            
-            return ResponseEntity.ok(createResponse(true, "成功删除购物车商品"));
+            return ResponseEntity.ok(
+                createResponse(true, "删除成功", result)
+            );
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(createResponse(false, "删除购物车商品失败：" + e.getMessage()));
+            return ResponseEntity.badRequest().body(
+                createResponse(false, e.getMessage(), null)
+            );
         }
     }
 
@@ -82,9 +91,13 @@ public class CartController {
     public ResponseEntity<?> getUserCart(@PathVariable Integer userId) {
         try {
             List<Cart> cartList = cartService.getUserCart(userId);
-            return ResponseEntity.ok(cartList);
+            return ResponseEntity.ok(
+                createResponse(true, "获取成功", cartList)
+            );
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(createResponse(false, "获取购物车列表失败：" + e.getMessage()));
+            return ResponseEntity.badRequest().body(
+                createResponse(false, e.getMessage(), null)
+            );
         }
     }
 
@@ -92,21 +105,13 @@ public class CartController {
     public ResponseEntity<?> clearCart(@PathVariable Integer userId) {
         try {
             boolean result = cartService.clearCart(userId);
-            if (!result) {
-                return ResponseEntity.badRequest().body(createResponse(false, "清空购物车失败"));
-            }
-            
-            return ResponseEntity.ok(createResponse(true, "成功清空购物车"));
+            return ResponseEntity.ok(
+                createResponse(true, "清空成功", result)
+            );
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(createResponse(false, "清空购物车失败：" + e.getMessage()));
+            return ResponseEntity.badRequest().body(
+                createResponse(false, e.getMessage(), null)
+            );
         }
-    }
-
-    // 创建统一的响应格式
-    private Map<String, Object> createResponse(boolean success, String message) {
-        Map<String, Object> response = new HashMap<>();
-        response.put("success", success);
-        response.put("message", message);
-        return response;
     }
 } 

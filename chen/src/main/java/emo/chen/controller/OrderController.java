@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -72,6 +73,26 @@ public class OrderController {
                                         @RequestParam(defaultValue = "1") int page,
                                         @RequestParam(defaultValue = "10") int size) {
         Page<Order> orders = orderService.getAllOrders(orderState, page, size);
+        return ResponseEntity.ok(orders);
+    }
+
+    /**
+     * 获取今日订单统计信息
+     */
+    @GetMapping("/today/stats")
+    public ResponseEntity<?> getTodayOrderStats() {
+        Map<String, Object> stats = orderService.getTodayOrderStats();
+        return ResponseEntity.ok(stats);
+    }
+
+    /**
+     * 获取今日订单列表
+     */
+    @GetMapping("/today")
+    public ResponseEntity<?> getTodayOrders(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Page<Order> orders = orderService.getTodayOrders(page, size);
         return ResponseEntity.ok(orders);
     }
 } 

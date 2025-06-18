@@ -11,6 +11,7 @@ import emo.chen.service.CommentService;
 import emo.chen.service.GoodsService;
 import emo.chen.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -22,7 +23,11 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     private GoodsService goodsService;
     
     @Autowired
-    private UserService userService;
+    private ApplicationContext applicationContext;
+    
+    private UserService getUserService() {
+        return applicationContext.getBean(UserService.class);
+    }
 
     @Override
     public Comment addComment(Comment comment) {
@@ -57,7 +62,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             for (Comment comment : commentPage.getRecords()) {
                 comment.setGoodsName(goodsName);
                 // 获取并设置用户名
-                User user = userService.getUserById(comment.getUserId());
+                User user = getUserService().getUserById(comment.getUserId());
                 if (user != null) {
                     comment.setUserName(user.getUsername());
                 } else {

@@ -23,30 +23,36 @@ public class CartServiceImpl extends ServiceImpl<CartMapper, Cart> implements Ca
 
     @Override
     @Transactional
-    public boolean addToCart(Integer userId, Integer goodsId, Integer quantity) {
+    public Cart addToCart(Integer userId, Integer goodsId, Integer quantity) {
         // 检查商品是否存在
         Goods goods = goodsMapper.selectById(goodsId);
-        if (goods == null || goods.getState() == 0) {
-            return false;
+        if (goods == null) {
+            throw new RuntimeException("商品不存在");
         }
 
-        // 检查库存是否充足
+        // 检查商品状态
+        if (goods.getState() != 1) {
+            throw new RuntimeException("商品已下架");
+        }
+
+        // 检查库存
         if (goods.getNum() < quantity) {
             throw new RuntimeException("商品库存不足");
         }
 
         // 检查是否已在购物车中
-        Cart existCart = checkExist(userId, goodsId);
-        if (existCart != null) {
-            // 检查增加后的总数量是否超过库存
-            if (goods.getNum() < (existCart.getQuantity() + quantity)) {
+        Cart existingCart = checkExist(userId, goodsId);
+        if (existingCart != null) {
+            // 已存在则更新数量
+            int newQuantity = existingCart.getQuantity() + quantity;
+            if (goods.getNum() < newQuantity) {
                 throw new RuntimeException("商品库存不足");
             }
-            // 更新数量
-            existCart.setQuantity(existCart.getQuantity() + quantity);
-            existCart.setTotalPrice(goods.getPrice().multiply(new BigDecimal(existCart.getQuantity())));
-            existCart.setUpdateTime(LocalDateTime.now());
-            return updateById(existCart);
+            existingCart.setQuantity(newQuantity);
+            existingCart.setTotalPrice(goods.getPrice().multiply(new BigDecimal(newQuantity)));
+            existingCart.setUpdateTime(LocalDateTime.now());
+            updateById(existingCart);
+            return existingCart;
         }
 
         // 创建新购物车项
@@ -56,26 +62,32 @@ public class CartServiceImpl extends ServiceImpl<CartMapper, Cart> implements Ca
         cart.setGoodsName(goods.getName());
         cart.setQuantity(quantity);
         cart.setPrice(goods.getPrice());
-        cart.setTotalPrice(cart.getPrice().multiply(new BigDecimal(quantity)));
+        cart.setTotalPrice(goods.getPrice().multiply(new BigDecimal(quantity)));
         cart.setImgUrl(goods.getImgUrl());
         cart.setAddTime(LocalDateTime.now());
         cart.setUpdateTime(LocalDateTime.now());
 
-        return save(cart);
+        save(cart);
+        return cart;
     }
 
     @Override
     @Transactional
-    public boolean updateQuantity(Integer cartId, Integer quantity) {
+    public Cart updateQuantity(Integer cartId, Integer quantity) {
         Cart cart = getById(cartId);
         if (cart == null) {
-            return false;
+            throw new RuntimeException("购物车商品不存在");
         }
 
         // 获取商品信息
         Goods goods = goodsMapper.selectById(cart.getGoodsId());
         if (goods == null) {
-            return false;
+            throw new RuntimeException("商品不存在");
+        }
+
+        // 检查商品状态
+        if (goods.getState() != 1) {
+            throw new RuntimeException("商品已下架");
         }
 
         // 检查库存是否足够
@@ -85,10 +97,12 @@ public class CartServiceImpl extends ServiceImpl<CartMapper, Cart> implements Ca
 
         // 更新购物车
         cart.setQuantity(quantity);
-        cart.setTotalPrice(cart.getPrice().multiply(new BigDecimal(quantity)));
+        cart.setPrice(goods.getPrice()); // 更新最新价格
+        cart.setTotalPrice(goods.getPrice().multiply(new BigDecimal(quantity)));
         cart.setUpdateTime(LocalDateTime.now());
         
-        return updateById(cart);
+        updateById(cart);
+        return cart;
     }
 
     @Override

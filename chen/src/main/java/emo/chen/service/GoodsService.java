@@ -10,4 +10,11 @@ public interface GoodsService {
     Goods insert(Goods goods);
     boolean update(Goods goods);
     boolean deleteById(Integer goodsId);
+    
+    /**
+     * 检查商品是否可以删除或下架
+     * @param goodsId 商品ID
+     * @return true如果商品可以删除或下架，false如果不能
+     */
+    boolean canDeleteOrDeactivate(Integer goodsId);
 } 

@@ -90,7 +90,7 @@
                                  @click="payOrder(scope.row)">
                             付款
                         </el-button>
-                        <el-button v-if="scope.row.orderState === 0"
+                        <el-button v-if="scope.row.orderState === 0 || scope.row.orderState === 1"
                                  type="danger" 
                                  size="small" 
                                  @click="cancelOrder(scope.row)">

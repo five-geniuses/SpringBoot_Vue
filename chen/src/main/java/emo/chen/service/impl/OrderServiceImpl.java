@@ -15,16 +15,23 @@ import emo.chen.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
 public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements OrderService {
+
+    private static final Logger logger = LoggerFactory.getLogger(OrderServiceImpl.class);
 
     @Autowired
     private CartMapper cartMapper;
@@ -119,7 +126,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Transactional
     public boolean cancelOrder(String orderNo) {
         Order order = getOrderByNo(orderNo);
-        if (order == null || order.getOrderState() != 0) {
+        // 检查订单是否存在且状态为待付款或待发货
+        if (order == null || (order.getOrderState() != 0 && order.getOrderState() != 1)) {
             return false;
         }
         
@@ -217,18 +225,180 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             wrapper.eq("order_state", orderState);
         }
         wrapper.orderByDesc("create_time");
-        return page(pageParam, wrapper);
+        
+        // 使用MyBatis-Plus的分页查询
+        Page<Order> orderPage = page(pageParam, wrapper);
+        
+        // 获取订单项信息
+        if (orderPage.getRecords() != null && !orderPage.getRecords().isEmpty()) {
+            for (Order order : orderPage.getRecords()) {
+                // 获取订单项
+                QueryWrapper<OrderItem> itemWrapper = new QueryWrapper<>();
+                itemWrapper.eq("order_no", order.getOrderNo());
+                List<OrderItem> items = orderItemMapper.selectList(itemWrapper);
+                order.setOrderItems(items);
+            }
+        }
+        
+        return orderPage;
     }
 
     @Override
     public Page<Order> getAllOrders(Integer orderState, int page, int size) {
+        // 确保页码从1开始
+        if (page < 1) {
+            page = 1;
+        }
+        // 确保每页大小合理
+        if (size < 1) {
+            size = 10;
+        }
+        
+        // 创建分页对象
         Page<Order> pageParam = new Page<>(page, size);
+        
+        // 创建查询条件
         QueryWrapper<Order> wrapper = new QueryWrapper<>();
         if (orderState != null) {
             wrapper.eq("order_state", orderState);
         }
         wrapper.orderByDesc("create_time");
-        return page(pageParam, wrapper);
+        
+        // 执行分页查询
+        Page<Order> orderPage = page(pageParam, wrapper);
+        
+        // 获取订单项信息
+        if (orderPage.getRecords() != null && !orderPage.getRecords().isEmpty()) {
+            for (Order order : orderPage.getRecords()) {
+                // 获取订单项
+                QueryWrapper<OrderItem> itemWrapper = new QueryWrapper<>();
+                itemWrapper.eq("order_no", order.getOrderNo());
+                List<OrderItem> items = orderItemMapper.selectList(itemWrapper);
+                order.setOrderItems(items);
+            }
+        }
+        
+        return orderPage;
+    }
+
+    @Override
+    public Map<String, Object> getTodayOrderStats() {
+        // 获取今日开始和结束时间
+        LocalDateTime todayStart = LocalDate.now().atStartOfDay();
+        LocalDateTime todayEnd = LocalDateTime.now();
+        
+        // 创建查询条件
+        QueryWrapper<Order> wrapper = new QueryWrapper<>();
+        wrapper.between("create_time", todayStart, todayEnd);
+        
+        // 获取今日订单数量
+        long orderCount = count(wrapper);
+        
+        // 获取今日订单总额
+        BigDecimal totalAmount = baseMapper.getTodayTotalAmount(todayStart, todayEnd);
+        if (totalAmount == null) {
+            totalAmount = BigDecimal.ZERO;
+        }
+        
+        // 获取今日销售商品总数
+        Integer totalProducts = baseMapper.getTodayTotalProducts(todayStart, todayEnd);
+        if (totalProducts == null) {
+            totalProducts = 0;
+        }
+        
+        // 封装结果
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("orderCount", orderCount);
+        stats.put("totalAmount", totalAmount);
+        stats.put("totalProducts", totalProducts);
+        
+        return stats;
+    }
+
+    @Override
+    public Page<Order> getTodayOrders(int page, int size) {
+        // 获取今天的开始和结束时间
+        LocalDateTime todayStart = LocalDate.now().atStartOfDay();
+        LocalDateTime todayEnd = LocalDate.now().plusDays(1).atStartOfDay();
+        
+        // 构建分页查询
+        Page<Order> pageParam = new Page<>(page, size);
+        QueryWrapper<Order> wrapper = new QueryWrapper<>();
+        wrapper.between("create_time", todayStart, todayEnd)
+              .orderByDesc("create_time");
+        
+        // 执行分页查询
+        Page<Order> orderPage = page(pageParam, wrapper);
+        
+        // 获取订单项信息
+        if (orderPage.getRecords() != null && !orderPage.getRecords().isEmpty()) {
+            for (Order order : orderPage.getRecords()) {
+                // 获取订单项
+                QueryWrapper<OrderItem> itemWrapper = new QueryWrapper<>();
+                itemWrapper.eq("order_no", order.getOrderNo());
+                List<OrderItem> items = orderItemMapper.selectList(itemWrapper);
+                order.setOrderItems(items);
+            }
+        }
+        
+        return orderPage;
+    }
+
+    @Override
+    public boolean canDeleteUser(Integer userId) {
+        logger.info("检查用户是否可以删除，用户ID: {}", userId);
+        
+        // 查询用户的所有订单
+        QueryWrapper<Order> wrapper = new QueryWrapper<>();
+        wrapper.eq("user_id", userId);
+        List<Order> orders = list(wrapper);
+        
+        // 如果用户没有订单，可以直接删除
+        if (orders.isEmpty()) {
+            logger.info("用户没有订单，可以删除");
+            return true;
+        }
+        
+        // 检查所有订单是否都是已完成或已取消状态
+        for (Order order : orders) {
+            // orderState: 3-已完成, 4-已取消
+            if (order.getOrderState() != 3 && order.getOrderState() != 4) {
+                logger.info("用户存在未完成且未取消的订单，订单号: {}, 订单状态: {}", 
+                    order.getOrderNo(), order.getOrderState());
+                return false;
+            }
+        }
+        
+        logger.info("用户的所有订单都已完成或已取消，可以删除");
+        return true;
+    }
+
+    @Override
+    public boolean verifyOrderAmount(String orderNo, String amount) {
+        try {
+            // 获取订单信息
+            Order order = this.getOrderDetail(orderNo);
+            if (order == null) {
+                logger.error("订单不存在，订单号：{}", orderNo);
+                return false;
+            }
+
+            // 将字符串金额转换为BigDecimal进行精确比较
+            BigDecimal payAmount = new BigDecimal(amount);
+            BigDecimal orderAmount = order.getTotalAmount();
+
+            // 比较金额是否相等
+            if (orderAmount.compareTo(payAmount) == 0) {
+                return true;
+            } else {
+                logger.error("订单金额不匹配，订单号：{}，订单金额：{}，支付金额：{}", 
+                    orderNo, orderAmount, payAmount);
+                return false;
+            }
+        } catch (Exception e) {
+            logger.error("验证订单金额时发生错误，订单号：{}", orderNo, e);
+            return false;
+        }
     }
 
     private Order getOrderByNo(String orderNo) {
