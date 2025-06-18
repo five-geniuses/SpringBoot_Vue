@@ -9,10 +9,15 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.sql.SQLIntegrityConstraintViolationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RestController
 @RequestMapping("/api/orders")
 public class OrderController {
+
+    private static final Logger logger = LoggerFactory.getLogger(OrderController.class);
 
     @Autowired
     private OrderService orderService;
@@ -94,5 +99,51 @@ public class OrderController {
             @RequestParam(defaultValue = "10") int size) {
         Page<Order> orders = orderService.getTodayOrders(page, size);
         return ResponseEntity.ok(orders);
+    }
+
+    /**
+     * 删除订单
+     * 只能删除已完成或已取消的订单
+     */
+    @DeleteMapping("/{orderNo}")
+    public ResponseEntity<?> deleteOrder(@PathVariable String orderNo) {
+        try {
+            boolean result = orderService.deleteOrder(orderNo);
+            if (result) {
+                return ResponseEntity.ok(Map.of(
+                    "code", 200,
+                    "success", true,
+                    "message", "订单删除成功"
+                ));
+            } else {
+                return ResponseEntity.ok(Map.of(
+                    "code", 400,
+                    "success", false,
+                    "message", "订单删除失败，可能是订单不存在或订单状态不允许删除"
+                ));
+            }
+        } catch (Exception e) {
+            // 获取具体的错误信息
+            String errorMessage = e.getMessage();
+            Throwable cause = e.getCause();
+            if (cause != null) {
+                // 如果是外键约束错误
+                if (cause instanceof SQLIntegrityConstraintViolationException) {
+                    errorMessage = "删除失败：订单存在关联数据无法删除";
+                }
+                // 如果有更具体的错误信息，使用它
+                else if (cause.getMessage() != null) {
+                    errorMessage = cause.getMessage();
+                }
+            }
+            
+            logger.error("删除订单时发生错误，订单号: {}, 错误: {}", orderNo, errorMessage, e);
+            
+            return ResponseEntity.ok(Map.of(
+                "code", 500,
+                "success", false,
+                "message", "删除订单失败：" + errorMessage
+            ));
+        }
     }
 } 

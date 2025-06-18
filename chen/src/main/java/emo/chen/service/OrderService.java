@@ -77,4 +77,12 @@ public interface OrderService extends IService<Order> {
      * @return 更新结果
      */
     boolean updateOrder(Order order);
+
+    /**
+     * 删除订单
+     * 只有已完成或已取消的订单才能删除
+     * @param orderNo 订单号
+     * @return 删除是否成功
+     */
+    boolean deleteOrder(String orderNo);
 } 

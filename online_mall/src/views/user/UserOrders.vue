@@ -509,17 +509,7 @@
       </div>
       
       <template #footer>
-        <div class="comment-actions">
-          <el-button @click="viewCommentVisible = false">关闭</el-button>
-          <el-button 
-            type="danger" 
-            @click="deleteComment"
-            :loading="deleteCommentLoading"
-          >
-            <el-icon><Delete /></el-icon>
-            删除评价
-          </el-button>
-        </div>
+        <el-button @click="viewCommentVisible = false">关闭</el-button>
       </template>
     </el-dialog>
   </div>
@@ -536,8 +526,7 @@ import {
   Close, 
   Check, 
   Star, 
-  ShoppingBag,
-  Delete
+  ShoppingBag 
 } from '@element-plus/icons-vue'
 
 // 类型定义
@@ -637,7 +626,6 @@ const currentCommentOrder = ref<GroupedOrder | null>(null)
 const currentViewComment = ref<Comment | null>(null)
 const commentSubmitting = ref(false)
 const userComments = ref<Comment[]>([])
-const deleteCommentLoading = ref(false)
 
 const commentForm = ref<CommentForm>({
   rating: 5,
@@ -697,6 +685,9 @@ const fetchUserComments = async () => {
     if (response.ok) {
       const data = await response.json()
       userComments.value = Array.isArray(data) ? data : (data.records || [])
+      console.log('获取用户评论成功:', userComments.value.length, '条')
+    } else {
+      console.warn('获取用户评论失败:', response.status)
     }
   } catch (error) {
     console.error('获取用户评论失败:', error)
@@ -891,6 +882,8 @@ const submitComment = async () => {
       return
     }
     
+    console.log('提交评论数据:', commentData)
+    
     const response = await fetch('/api/api/comments', {
       method: 'POST',
       headers: {
@@ -905,11 +898,15 @@ const submitComment = async () => {
       throw new Error(errorData?.message || `提交评价失败 (${response.status})`)
     }
     
+    const result = await response.json()
+    console.log('评论提交成功:', result)
+    
     ElMessage.success('评价提交成功！')
     commentVisible.value = false
     
-    // 立即刷新
-    await fetchOrders()
+    // 重新获取评论信息并更新订单状态
+    await fetchUserComments()
+    await fetchOrdersWithItems()
     
   } catch (error) {
     console.error('提交评价失败:', error)
@@ -924,53 +921,6 @@ const viewComment = (item: OrderItem) => {
   if (item.comment) {
     currentViewComment.value = item.comment
     viewCommentVisible.value = true
-  }
-}
-
-// 删除评论
-const deleteComment = async () => {
-  if (!currentViewComment.value || !userId.value) return
-  
-  try {
-    await ElMessageBox.confirm(
-      '确定要删除这条评价吗？删除后您可以重新评价该商品。',
-      '删除评价',
-      {
-        confirmButtonText: '确定删除',
-        cancelButtonText: '取消',
-        type: 'warning',
-        confirmButtonClass: 'el-button--danger'
-      }
-    )
-    
-    deleteCommentLoading.value = true
-    
-    const response = await fetch(`/api/api/comments/${currentViewComment.value.commentId}?userId=${userId.value}`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      }
-    })
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null)
-      console.error('删除评论失败:', errorData)
-      throw new Error(errorData?.message || `删除评价失败 (${response.status})`)
-    }
-    
-    ElMessage.success('评价删除成功！您现在可以重新评价该商品')
-    viewCommentVisible.value = false
-    
-    // 立即刷新
-    await fetchOrders()
-    
-  } catch (error) {
-    if (error !== 'cancel') {
-      console.error('删除评价失败:', error)
-      ElMessage.error((error as Error).message || '删除评价失败，请稍后重试')
-    }
-  } finally {
-    deleteCommentLoading.value = false
   }
 }
 
@@ -1880,15 +1830,139 @@ onMounted(() => {
   word-break: break-word;
 }
 
-.comment-actions {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-}
-
 .icon {
   margin-right: 4px;
   font-size: 1em;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .orders-container {
+    padding: 12px;
+  }
+  
+  .page-header {
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  
+  .page-header h1 {
+    font-size: 1.8em;
+  }
+  
+  .filter-section {
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  
+  .filter-tabs {
+    gap: 6px;
+  }
+  
+  .filter-tab {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+  
+  .order-group-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+  }
+  
+  .order-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .order-status-info {
+    align-self: stretch;
+    justify-content: space-between;
+  }
+  
+  .item-content {
+    flex-direction: column;
+    padding: 16px;
+    gap: 12px;
+  }
+  
+  .item-details {
+    width: 100%;
+    text-align: center;
+  }
+  
+  .item-specs {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .item-actions {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .order-group-footer {
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+  }
+  
+  .shipping-info {
+    text-align: center;
+  }
+  
+  .order-total {
+    justify-content: center;
+  }
+  
+  .detail-item-main {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .detail-item-image {
+    align-self: center;
+  }
+  
+  .detail-item-specs {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .detail-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+    text-align: center;
+  }
+  
+  .detail-label {
+    font-weight: 600;
+    color: #374151;
+  }
+  
+  .comment-product-info {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .comment-product-img {
+    align-self: center;
+  }
+  
+  .comment-rating, .comment-content, .comment-time {
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .rating-label, .content-label, .time-label {
+    min-width: auto;
+    font-weight: 600;
+    color: #374151;
+  }
 }
 
 /* Element Plus 组件样式覆盖 */

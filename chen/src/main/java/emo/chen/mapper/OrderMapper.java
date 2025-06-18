@@ -17,6 +17,6 @@ public interface OrderMapper extends BaseMapper<Order> {
     @Select("SELECT COALESCE(SUM(total_amount), 0) FROM t_order WHERE create_time BETWEEN #{todayStart} AND #{todayEnd}")
     BigDecimal getTodayTotalAmount(LocalDateTime todayStart, LocalDateTime todayEnd);
     
-    @Select("SELECT COUNT(DISTINCT goods_id) FROM t_order o JOIN t_order_item i ON o.order_no = i.order_no WHERE o.create_time BETWEEN #{todayStart} AND #{todayEnd}")
+    @Select("SELECT COUNT(DISTINCT goods_id) FROM t_order o JOIN t_order_items i ON o.order_no = i.order_no WHERE o.create_time BETWEEN #{todayStart} AND #{todayEnd}")
     Integer getTodayTotalProducts(LocalDateTime todayStart, LocalDateTime todayEnd);
 } 

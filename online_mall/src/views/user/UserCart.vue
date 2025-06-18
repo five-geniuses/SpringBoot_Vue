@@ -430,7 +430,7 @@
 <script setup lang="ts">
 import { ref, computed, nextTick, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ElMessage, ElMessageBox, type FormInstance, ElLoading } from 'element-plus'
+import { ElMessage, ElMessageBox, type FormInstance } from 'element-plus'
 import { 
   Delete, 
   ShoppingCart, 
@@ -1124,7 +1124,7 @@ const submitOrder = async () => {
   }
 }
 
-// 处理支付选择
+// 处理支付选择 - 修改后的版本
 const handlePaymentChoice = async (paymentType: 'immediate' | 'later') => {
   if (!createdOrder.value) {
     ElMessage.error('订单信息异常，请重试')
@@ -1135,46 +1135,22 @@ const handlePaymentChoice = async (paymentType: 'immediate' | 'later') => {
     paymentLoading.value = true
     
     if (paymentType === 'immediate') {
-      // 显示支付加载状态
-      const loadingInstance = ElLoading.service({
-        lock: true,
-        text: '正在处理支付...',
-        background: 'rgba(0, 0, 0, 0.7)'
-      })
+      // 立即支付 - 调用支付接口
+      const payResult = await api.payOrder(createdOrder.value.orderNo)
+      console.log('支付结果:', payResult)
       
-      try {
-        // 调用支付宝支付接口
-        const response = await fetch(`/api/api/orders/pay/${createdOrder.value.orderNo}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          }
-        })
-        
-        if (!response.ok) {
-          throw new Error('支付失败')
+      ElMessage.success('支付成功！')
+      
+      // 跳转到订单详情页面，标记为已支付
+      router.push({
+        path: '/user/orders',
+        query: { 
+          orderNo: createdOrder.value.orderNo,
+          fromCart: '1',
+          paid: '1',
+          buyNow: isBuyNowMode.value ? '1' : '0'
         }
-        
-        const result = await response.json()
-        
-        if (result === true || result.success !== false) {
-          ElMessage.success('支付成功！')
-          
-          // 跳转到订单列表页面
-          router.push({
-            path: '/user/orders',
-            query: { 
-              orderNo: createdOrder.value.orderNo,
-              fromCart: '1',
-              buyNow: isBuyNowMode.value ? '1' : '0'
-            }
-          })
-        } else {
-          throw new Error(result.message || '支付失败')
-        }
-      } finally {
-        loadingInstance.close()
-      }
+      })
     } else {
       // 稍后支付 - 直接跳转
       ElMessage.success('您可以稍后在订单中心完成支付')

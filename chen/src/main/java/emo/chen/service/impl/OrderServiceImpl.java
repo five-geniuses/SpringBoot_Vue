@@ -7,10 +7,12 @@ import emo.chen.entity.Cart;
 import emo.chen.entity.Goods;
 import emo.chen.entity.Order;
 import emo.chen.entity.OrderItem;
+import emo.chen.entity.Comment;
 import emo.chen.mapper.CartMapper;
 import emo.chen.mapper.GoodsMapper;
 import emo.chen.mapper.OrderItemMapper;
 import emo.chen.mapper.OrderMapper;
+import emo.chen.mapper.CommentMapper;
 import emo.chen.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -41,6 +43,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     
     @Autowired
     private OrderItemMapper orderItemMapper;
+
+    @Autowired
+    private CommentMapper commentMapper;
 
     @Override
     @Transactional
@@ -412,6 +417,57 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             return false;
         }
         return updateById(order);
+    }
+
+    @Override
+    @Transactional
+    public boolean deleteOrder(String orderNo) {
+        logger.info("开始删除订单，订单号: {}", orderNo);
+        
+        // 1. 检查订单是否存在
+        Order order = getOrderByNo(orderNo);
+        if (order == null) {
+            logger.warn("要删除的订单不存在，订单号: {}", orderNo);
+            return false;
+        }
+        
+        // 2. 检查订单状态（只能删除已完成或已取消的订单）
+        if (order.getOrderState() != 3 && order.getOrderState() != 4) {
+            logger.warn("只能删除已完成或已取消的订单，订单号: {}, 当前状态: {}", 
+                orderNo, order.getOrderState());
+            return false;
+        }
+
+        try {
+            // 3. 删除订单相关的评论
+            QueryWrapper<Comment> commentWrapper = new QueryWrapper<>();
+            commentWrapper.eq("order_no", orderNo);
+            commentMapper.delete(commentWrapper);
+            logger.info("已删除订单相关评论");
+            
+            // 4. 删除订单项
+            QueryWrapper<OrderItem> itemWrapper = new QueryWrapper<>();
+            itemWrapper.eq("order_no", orderNo);
+            int deletedItems = orderItemMapper.delete(itemWrapper);
+            logger.info("已删除订单项数量: {}", deletedItems);
+            
+            // 5. 删除订单
+            QueryWrapper<Order> orderWrapper = new QueryWrapper<>();
+            orderWrapper.eq("order_no", orderNo);
+            boolean result = remove(orderWrapper);
+            
+            if (result) {
+                logger.info("订单删除成功，订单号: {}", orderNo);
+            } else {
+                logger.error("订单删除失败，订单号: {}", orderNo);
+                throw new RuntimeException("删除订单失败");
+            }
+            
+            return result;
+        } catch (Exception e) {
+            logger.error("删除订单及相关数据时发生错误，订单号: {}", orderNo, e);
+            throw new RuntimeException("删除订单及相关数据时发生错误", e);
+        }
     }
 
     private Order getOrderByNo(String orderNo) {

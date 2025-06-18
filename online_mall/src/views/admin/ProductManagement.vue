@@ -47,19 +47,27 @@
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column label="商品图片" width="100">
           <template #default="scope">
-            <el-image
-              style="width: 60px; height: 60px; border-radius: 4px;"
-              :src="getImageUrl(scope.row.image)"
-              fit="cover"
-              :preview-src-list="[getImageUrl(scope.row.image)]"
-              preview-teleported
-            >
-              <template #error>
-                <div class="image-slot">
-                  <el-icon><Picture /></el-icon>
-                </div>
-              </template>
-            </el-image>
+            <div class="product-image">
+              <el-image
+                style="width: 80px; height: 80px; border-radius: 4px;"
+                :src="getImageUrl(scope.row.imgUrl)"
+                :alt="scope.row.name"
+                fit="cover"
+                :preview-src-list="[getImageUrl(scope.row.imgUrl)]"
+                :initial-index="0"
+              >
+                <template #error>
+                  <div class="image-slot">
+                    <el-icon><Picture /></el-icon>
+                  </div>
+                </template>
+                <template #placeholder>
+                  <div class="image-slot">
+                    <el-icon><Loading /></el-icon>
+                  </div>
+                </template>
+              </el-image>
+            </div>
           </template>
         </el-table-column>
         <el-table-column prop="name" label="商品名称" min-width="150" />
@@ -81,23 +89,23 @@
         <el-table-column prop="createTime" label="创建时间" width="180" />
         <el-table-column label="操作" width="320" fixed="right">
           <template #default="scope">
-            <el-button size="small" @click="editProduct(scope.row)">编辑</el-button>
+            <el-button link @click="editProduct(scope.row)">编辑</el-button>
             <el-button 
-              size="small" 
+              link
               :type="scope.row.status === 'active' ? 'warning' : 'success'"
               @click="toggleStatus(scope.row)"
             >
               {{ scope.row.status === 'active' ? '下架' : '上架' }}
             </el-button>
             <el-button 
-              size="small" 
+              link
               type="danger" 
               @click="deleteProduct(scope.row)"
             >
               删除
             </el-button>
             <el-button 
-              size="small" 
+              link
               type="info"
               @click="showProductDetail(scope.row)"
             >
@@ -145,7 +153,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import axios from 'axios'
-import { Plus, Picture } from '@element-plus/icons-vue'
+import { Plus, Picture, Loading } from '@element-plus/icons-vue'
 
 // 导入子组件
 import AddProduct from './components/AddProduct.vue'
@@ -156,7 +164,7 @@ interface Product {
   id: number
   name: string
   price: number
-  image?: string
+  imgUrl?: string
   description?: string
   stock: number
   sales: number
@@ -175,11 +183,9 @@ interface ProductForm {
   id?: number
   name: string
   price: number
-  image?: string
+  imgUrl?: string
   description?: string
   stock: number
-  sales?: number
-  avgRating?: number
   categoryName: string
   cateId?: number
   status: 'active' | 'inactive'
@@ -188,7 +194,6 @@ interface ProductForm {
   storagemethod: string
   size: number
   kgs: string
-  imageFile?: string
 }
 
 interface SearchForm {
@@ -215,13 +220,13 @@ const isEditMode = ref(false)
 // 数据
 const products = ref<Product[]>([])
 const availableCategories = ref<Category[]>([])
-const selectedProductDetail = ref<Product | null>(null)
+const selectedProductDetail = ref<Product | undefined>(undefined)
 
 // 当前操作的商品数据
 const currentProductData = ref<ProductForm>({
   name: '',
   price: 0,
-  image: '',
+  imgUrl: '',
   description: '',
   stock: 0,
   categoryName: '',
@@ -232,33 +237,12 @@ const currentProductData = ref<ProductForm>({
   storagemethod: '常温保存',
   size: 0,
   kgs: '',
-  imageFile: ''
 })
 
 const searchForm = ref<SearchForm>({
   name: '',
   status: ''
 })
-
-// 🔥 工具函数：获取图片URL
-const getImageUrl = (imgUrl: string | null): string => {
-  if (!imgUrl) {
-    return '/placeholder-image.png'
-  }
-  
-  // 如果已经是完整URL，直接返回
-  if (imgUrl.startsWith('http://') || imgUrl.startsWith('https://')) {
-    return imgUrl
-  }
-  
-  // 如果已经包含/uploads/路径，直接拼接baseUrl
-  if (imgUrl.startsWith('/uploads/')) {
-    return `http://localhost:8080${imgUrl}`
-  }
-  
-  // 否则拼接 /uploads/ + imgUrl
-  return `http://localhost:8080/uploads/${imgUrl}`
-}
 
 // 🔥 工具函数：获取当前时间 YYYY-MM-DD HH:mm:ss 格式
 const getCurrentDateTime = (): string => {
@@ -405,7 +389,7 @@ const transformProductData = (item: any): Product => {
     category: safeGet(item.categoryName),
     categoryId: safeGet(item.cateId),
     description: safeGet(item.desc),
-    image: safeGet(item.imgUrl),
+    imgUrl: safeGet(item.imgUrl || item.image), // 统一图片字段处理
     status: item.state === 1 ? 'active' : 'inactive',
     createTime: item.addtime ? new Date(item.addtime).toLocaleString('zh-CN') : '',
     creationdate: safeGet(item.creationdate),
@@ -474,7 +458,7 @@ const showAddDialog = () => {
   currentProductData.value = {
     name: '',
     price: 0,
-    image: '',
+    imgUrl: '',
     description: '',
     stock: 0,
     categoryName: '',
@@ -485,7 +469,6 @@ const showAddDialog = () => {
     storagemethod: '常温保存',
     size: 0,
     kgs: '',
-    imageFile: ''
   }
   productDialogVisible.value = true
 }
@@ -509,7 +492,7 @@ const editProduct = async (product: Product) => {
     id: product.id,
     name: product.name,
     price: product.price,
-    image: product.image,
+    imgUrl: product.imgUrl,
     description: product.description,
     stock: product.stock,
     categoryName: product.category,
@@ -520,7 +503,6 @@ const editProduct = async (product: Product) => {
     storagemethod: product.storagemethod || '常温保存',
     size: Number(product.size) || 0, // 🔥 确保size是数字类型
     kgs: product.kgs || '',
-    imageFile: product.image || ''
   }
   
   console.log('设置的表单数据:', currentProductData.value)
@@ -576,7 +558,7 @@ const toggleStatus = async (product: Product) => {
       storagemethod: product.storagemethod || '常温保存',
       addtime: getCurrentDateTime(), // 🔥 当前时间 YYYY-MM-DD HH:mm:ss
       state: product.status === 'active' ? 0 : 1, // 🔥 切换状态
-      imgUrl: product.image || ''
+      imgUrl: product.imgUrl || ''
     }
 
     console.log('发送的状态切换数据:', JSON.stringify(requestData, null, 2))
@@ -648,6 +630,26 @@ const handleProductCancel = () => {
   console.log('用户取消了商品操作')
   // 取消操作，可以在这里添加额外逻辑
 }
+
+// 获取图片URL的统一处理函数
+const getImageUrl = (imgUrl: string | null): string => {
+  if (!imgUrl) {
+    return '/placeholder-product.png'
+  }
+  
+  // 如果已经是完整URL，直接返回
+  if (imgUrl.startsWith('http://') || imgUrl.startsWith('https://')) {
+    return imgUrl
+  }
+  
+  // 如果已经包含/uploads/路径，直接拼接baseUrl
+  if (imgUrl.startsWith('/uploads/')) {
+    return `http://localhost:8080${imgUrl}`
+  }
+  
+  // 否则拼接 /uploads/ + imgUrl
+  return `http://localhost:8080/uploads/${imgUrl}`
+}
 </script>
 
 <style scoped>
@@ -666,6 +668,32 @@ const handleProductCancel = () => {
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.product-image {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.image-slot {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  background-color: #f5f7fa;
+  color: #909399;
+  font-size: 20px;
+}
+
+.el-image {
+  transition: transform 0.3s ease;
+  cursor: pointer;
+}
+
+.el-image:hover {
+  transform: scale(1.05);
 }
 
 .filter-section {
@@ -694,21 +722,5 @@ const handleProductCancel = () => {
 .page-size-info {
   color: #606266;
   font-size: 14px;
-}
-
-/* 🔥 图片相关样式 */
-.image-slot {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  height: 100%;
-  background: #f5f7fa;
-  color: #909399;
-  font-size: 20px;
-}
-
-:deep(.el-image__error) {
-  background: #f5f7fa;
 }
 </style>

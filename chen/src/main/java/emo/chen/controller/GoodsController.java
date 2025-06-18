@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Value;
 import java.io.File;
 import java.util.UUID;
 import java.util.Map;
+import java.sql.SQLIntegrityConstraintViolationException;
 
 @RestController
 @RequestMapping("/api/goods")
@@ -82,31 +83,102 @@ public class GoodsController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Void> update(
+    public ResponseEntity<?> update(
             @PathVariable("id") Integer id,
             @RequestBody Goods goods) {
         logger.info("更新商品，ID: {}, 商品信息: {}", id, goods);
         try {
             goods.setGoodsId(id);
-            return goodsService.update(goods)
-                    ? ResponseEntity.ok().build()
-                    : ResponseEntity.notFound().build();
+            boolean result = goodsService.update(goods);
+            if (result) {
+                return ResponseEntity.ok(Map.of(
+                    "code", 200,
+                    "success", true,
+                    "message", "商品更新成功"
+                ));
+            } else {
+                // 检查是否是因为有未完成订单而无法下架
+                if (goods.getState() != null && goods.getState() == 0 && !goodsService.canDeleteOrDeactivate(id)) {
+                    return ResponseEntity.ok(Map.of(
+                        "code", 400,
+                        "success", false,
+                        "message", "商品下架失败：该商品还有未完成的订单"
+                    ));
+                }
+                return ResponseEntity.ok(Map.of(
+                    "code", 404,
+                    "success", false,
+                    "message", "商品更新失败：商品不存在"
+                ));
+            }
         } catch (Exception e) {
             logger.error("更新商品失败，ID: {}", id, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            String errorMessage = e.getMessage();
+            Throwable cause = e.getCause();
+            if (cause != null && cause.getMessage() != null) {
+                errorMessage = cause.getMessage();
+            }
+            return ResponseEntity.ok(Map.of(
+                "code", 500,
+                "success", false,
+                "message", "更新商品失败：" + errorMessage
+            ));
         }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable("id") Integer id) {
+    public ResponseEntity<?> delete(@PathVariable("id") Integer id) {
         logger.info("删除商品，ID: {}", id);
         try {
-            return goodsService.deleteById(id)
-                    ? ResponseEntity.ok().build()
-                    : ResponseEntity.notFound().build();
+            // 先检查商品是否存在
+            Goods goods = goodsService.findById(id);
+            if (goods == null) {
+                return ResponseEntity.ok(Map.of(
+                    "code", 404,
+                    "success", false,
+                    "message", "删除失败：商品不存在"
+                ));
+            }
+
+            // 检查是否可以删除
+            if (!goodsService.canDeleteOrDeactivate(id)) {
+                return ResponseEntity.ok(Map.of(
+                    "code", 400,
+                    "success", false,
+                    "message", "删除失败：该商品还有未完成的订单，无法删除"
+                ));
+            }
+
+            boolean result = goodsService.deleteById(id);
+            if (result) {
+                return ResponseEntity.ok(Map.of(
+                    "code", 200,
+                    "success", true,
+                    "message", "商品删除成功"
+                ));
+            } else {
+                return ResponseEntity.ok(Map.of(
+                    "code", 500,
+                    "success", false,
+                    "message", "商品删除失败，请稍后重试"
+                ));
+            }
         } catch (Exception e) {
             logger.error("删除商品失败，ID: {}", id, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            String errorMessage = e.getMessage();
+            Throwable cause = e.getCause();
+            if (cause != null) {
+                if (cause instanceof SQLIntegrityConstraintViolationException) {
+                    errorMessage = "商品存在关联数据无法删除";
+                } else if (cause.getMessage() != null) {
+                    errorMessage = cause.getMessage();
+                }
+            }
+            return ResponseEntity.ok(Map.of(
+                "code", 500,
+                "success", false,
+                "message", "删除商品失败：" + errorMessage
+            ));
         }
     }
 
